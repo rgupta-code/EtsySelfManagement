@@ -105,6 +105,7 @@ class NavigationManager {
         const titles = {
             home: 'EtsyFlow - Streamline Your Etsy Listings',
             upload: 'Upload Images - EtsyFlow',
+            settings: 'Settings - EtsyFlow',
             about: 'About Us - EtsyFlow',
             contact: 'Contact Us - EtsyFlow'
         };

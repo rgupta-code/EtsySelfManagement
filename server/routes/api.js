@@ -390,6 +390,27 @@ router.patch('/settings/:section', asyncHandler(async (req, res) => {
 }));
 
 /**
+ * Authentication status endpoint
+ */
+router.get('/auth/status', asyncHandler(async (req, res) => {
+  const googleDriveStatus = {
+    connected: googleDriveService.isAuthenticated(),
+    email: googleDriveService.isAuthenticated() ? googleDriveService.getUserEmail() : null
+  };
+  
+  const etsyStatus = {
+    connected: etsyService.isAuthenticated(),
+    shopName: etsyService.isAuthenticated() ? etsyService.getShopName() : null
+  };
+  
+  res.json({
+    success: true,
+    googleDrive: googleDriveStatus,
+    etsy: etsyStatus
+  });
+}));
+
+/**
  * Authentication endpoints for Google Drive
  */
 router.get('/auth/google', asyncHandler(async (req, res) => {
