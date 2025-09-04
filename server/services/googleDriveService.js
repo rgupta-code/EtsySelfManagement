@@ -84,6 +84,19 @@ class GoogleDriveService {
   }
 
   /**
+   * Set access token for authenticated requests
+   * @param {string} accessToken - Access token
+   */
+  setAccessToken(accessToken) {
+    if (!this.oauth2Client) {
+      throw new Error('OAuth client not initialized');
+    }
+
+    this.oauth2Client.setCredentials({ access_token: accessToken });
+    this.tokens = { access_token: accessToken };
+  }
+
+  /**
    * Refresh access token using refresh token
    */
   async refreshAccessToken() {
@@ -283,6 +296,32 @@ class GoogleDriveService {
    */
   getTokens() {
     return this.tokens;
+  }
+
+  /**
+   * Get user information from Google
+   * @returns {Object} User information
+   */
+  async getUserInfo() {
+    if (!this.oauth2Client) {
+      throw new Error('OAuth client not initialized');
+    }
+
+    try {
+      const oauth2 = google.oauth2({ version: 'v2', auth: this.oauth2Client });
+      const response = await oauth2.userinfo.get();
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to get user info: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get user email (convenience method)
+   * @returns {string|null} User email or null if not authenticated
+   */
+  getUserEmail() {
+    return this.tokens?.email || null;
   }
 
   /**

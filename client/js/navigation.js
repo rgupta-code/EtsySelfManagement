@@ -68,6 +68,9 @@ class NavigationManager {
             targetPage.classList.remove('hidden');
             this.currentPage = pageName;
 
+            // Initialize page-specific functionality
+            this.initializePageFunctionality(pageName);
+
             // Update navigation active states
             this.updateActiveNavigation(pageName);
 
@@ -82,6 +85,23 @@ class NavigationManager {
 
             // Scroll to top
             window.scrollTo(0, 0);
+        }
+    }
+
+    initializePageFunctionality(pageName) {
+        switch (pageName) {
+            case 'upload':
+                // Initialize upload manager if not already initialized
+                if (!window.uploadManager) {
+                    window.uploadManager = new UploadManager();
+                }
+                break;
+            case 'settings':
+                // Initialize settings manager if not already initialized
+                if (!window.settingsManager) {
+                    window.settingsManager = new SettingsManager();
+                }
+                break;
         }
     }
 

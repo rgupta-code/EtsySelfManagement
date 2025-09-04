@@ -222,32 +222,24 @@ class UploadManager {
             // Reset progress indicators
             this.resetProgressIndicators();
             
-            // Create FormData for upload
-            const formData = new FormData();
-            this.selectedFiles.forEach((file, index) => {
-                formData.append('images', file);
-            });
-
             // Start progress tracking
             this.updateProgressStep('validation', 'in-progress');
             
-            // Make API call with progress tracking
-            const response = await this.uploadWithProgress(formData);
+            // Upload images using API client
+            const result = await window.apiClient.uploadImages(
+                this.selectedFiles,
+                {}, // Additional options can be added here
+                (progress) => {
+                    // Handle upload progress
+                    this.updateUploadProgress(progress.percent);
+                }
+            );
             
-            // Simulate backend processing steps
-            await this.simulateBackendProgress();
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || `Upload failed: ${response.statusText}`);
-            }
-
-            const result = await response.json();
             this.currentProcessingId = result.processingId;
             
-            // If we have a processing ID, we can poll for status updates
-            if (result.processingId && result.status === 'processing') {
-                await this.pollProcessingStatus(result.processingId);
+            // If we have a processing ID, poll for status updates
+            if (result.processingId) {
+                await this.pollProcessingStatusWithAPI(result.processingId);
             } else {
                 // Complete all steps and show results immediately
                 this.completeAllSteps();
@@ -262,49 +254,59 @@ class UploadManager {
         }
     }
 
-    async uploadWithProgress(formData) {
-        return new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            
-            // Track upload progress
-            xhr.upload.addEventListener('progress', (e) => {
-                if (e.lengthComputable) {
-                    const percentComplete = (e.loaded / e.total) * 100;
-                    this.updateUploadProgress(percentComplete);
+    async pollProcessingStatusWithAPI(processingId) {
+        try {
+            await window.apiClient.pollProcessingStatus(
+                processingId,
+                (status) => {
+                    // Update UI based on backend status
+                    this.updateProgressFromBackendStatus(status);
                 }
-            });
+            );
             
-            // Handle response
-            xhr.addEventListener('load', () => {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    resolve({
-                        ok: true,
-                        json: () => Promise.resolve(JSON.parse(xhr.responseText))
-                    });
-                } else {
-                    resolve({
-                        ok: false,
-                        status: xhr.status,
-                        statusText: xhr.statusText,
-                        json: () => Promise.resolve(JSON.parse(xhr.responseText || '{}'))
-                    });
-                }
-            });
+            // Mark all steps as completed when done
+            this.completeAllSteps();
             
-            // Handle errors
-            xhr.addEventListener('error', () => {
-                reject(new Error('Network error occurred during upload'));
-            });
-            
-            xhr.addEventListener('timeout', () => {
-                reject(new Error('Upload timed out. Please try again.'));
-            });
-            
-            // Configure and send request
-            xhr.open('POST', '/api/upload');
-            xhr.timeout = 300000; // 5 minute timeout
-            xhr.send(formData);
-        });
+        } catch (error) {
+            console.error('Error polling status:', error);
+            // Fall back to simulation if polling fails
+            await this.simulateBackendProgress();
+        }
+    }
+
+    updateProgressFromBackendStatus(status) {
+        if (!status.steps || status.steps.length === 0) return;
+
+        // Map backend steps to frontend steps
+        const stepMapping = {
+            'validation': 'validation',
+            'watermarking': 'processing',
+            'collage': 'processing',
+            'packaging': 'processing',
+            'ai_metadata': 'ai-generation',
+            'etsy_listing': 'etsy-creation'
+        };
+
+        // Get the latest step
+        const latestStep = status.steps[status.steps.length - 1];
+        const frontendStep = stepMapping[latestStep.step];
+
+        if (frontendStep) {
+            // Mark previous steps as completed
+            const stepIndex = this.processingSteps.findIndex(s => s.id === frontendStep);
+            for (let i = 0; i < stepIndex; i++) {
+                this.updateProgressStep(this.processingSteps[i].id, 'completed');
+            }
+
+            // Update current step
+            if (latestStep.status === 'started') {
+                this.updateProgressStep(frontendStep, 'in-progress');
+            } else if (latestStep.status === 'completed') {
+                this.updateProgressStep(frontendStep, 'completed');
+            } else if (latestStep.status === 'failed') {
+                this.updateProgressStep(frontendStep, 'error');
+            }
+        }
     }
 
     updateUploadProgress(percent) {
@@ -447,58 +449,7 @@ class UploadManager {
         }
     }
 
-    async pollProcessingStatus(processingId) {
-        const maxPolls = 60; // Maximum 5 minutes of polling (5 second intervals)
-        let pollCount = 0;
-        
-        while (pollCount < maxPolls) {
-            try {
-                const response = await fetch(`/api/status/${processingId}`);
-                if (!response.ok) {
-                    throw new Error('Failed to get processing status');
-                }
-                
-                const status = await response.json();
-                
-                // Update progress based on backend status
-                if (status.currentStep) {
-                    // Mark previous steps as completed
-                    const stepIndex = this.processingSteps.findIndex(s => s.id === status.currentStep);
-                    for (let i = 0; i < stepIndex; i++) {
-                        this.updateProgressStep(this.processingSteps[i].id, 'completed');
-                    }
-                    
-                    // Mark current step as in progress
-                    this.updateProgressStep(status.currentStep, 'in-progress');
-                }
-                
-                // Check if processing is complete
-                if (status.status === 'completed' || status.status === 'failed') {
-                    if (status.status === 'completed') {
-                        this.completeAllSteps();
-                    } else {
-                        this.updateProgressStep(status.currentStep || 'validation', 'error');
-                    }
-                    break;
-                }
-                
-                // Wait before next poll
-                await new Promise(resolve => setTimeout(resolve, 5000));
-                pollCount++;
-                
-            } catch (error) {
-                console.error('Error polling status:', error);
-                // Fall back to simulation if polling fails
-                await this.simulateBackendProgress();
-                break;
-            }
-        }
-        
-        // If we've exceeded max polls, complete all steps
-        if (pollCount >= maxPolls) {
-            this.completeAllSteps();
-        }
-    }
+    // This method is replaced by pollProcessingStatusWithAPI
 
     showResults(result) {
         document.getElementById('processing-container').classList.add('hidden');
@@ -887,5 +838,111 @@ function resetUpload() {
         window.uploadManager.resetUpload();
     }
 }
+
+console.log('Upload module loaded');    a
+sync retryProcessing() {
+        this.retryCount++;
+        this.hideErrors();
+        await this.startProcessing();
+    }
+
+    copyToClipboard(text, type) {
+        navigator.clipboard.writeText(text).then(() => {
+            // Show copy feedback
+            this.showCopyFeedback(type);
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            this.showCopyFeedback(type);
+        });
+    }
+
+    showCopyFeedback(type) {
+        // Create temporary feedback element
+        const feedback = document.createElement('div');
+        feedback.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-2xl text-sm font-medium copy-feedback z-50';
+        feedback.textContent = `${type.charAt(0).toUpperCase() + type.slice(1)} copied to clipboard!`;
+        
+        document.body.appendChild(feedback);
+        
+        setTimeout(() => {
+            feedback.remove();
+        }, 2000);
+    }
+
+    resetUpload() {
+        // Clear selected files
+        this.selectedFiles = [];
+        this.currentProcessingId = null;
+        this.retryCount = 0;
+        
+        // Reset file input
+        const fileInput = document.getElementById('file-input');
+        fileInput.value = '';
+        
+        // Hide all containers except upload
+        document.getElementById('preview-container').classList.add('hidden');
+        document.getElementById('processing-container').classList.add('hidden');
+        document.getElementById('results-container').classList.add('hidden');
+        document.getElementById('upload-container').classList.remove('hidden');
+        
+        // Clear any errors
+        this.hideErrors();
+    }
+
+    showProcessingError(message, showRetry = false) {
+        const errorContainer = document.getElementById('error-container');
+        const errorList = document.getElementById('error-list');
+        
+        errorList.innerHTML = `<p>• ${message}</p>`;
+        
+        if (showRetry && this.retryCount < this.maxRetries) {
+            errorList.innerHTML += `
+                <div class="mt-4">
+                    <button onclick="uploadManager.retryProcessing()" 
+                            class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-2xl text-sm font-medium transition-colors">
+                        <i class="fas fa-redo mr-2"></i>
+                        Retry (${this.maxRetries - this.retryCount} attempts left)
+                    </button>
+                </div>
+            `;
+        }
+        
+        errorContainer.classList.remove('hidden');
+        
+        // Hide processing container and show error
+        document.getElementById('processing-container').classList.add('hidden');
+    }
+}
+
+// Initialize upload manager when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Only initialize if we're on the upload page
+    if (document.getElementById('upload-page')) {
+        window.uploadManager = new UploadManager();
+    }
+});
+
+// Global function to reset upload (for use by other modules)
+function resetUpload() {
+    if (window.uploadManager) {
+        window.uploadManager.resetUpload();
+    }
+}
+
+// Initialize upload manager when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    // Only initialize if we're on the upload page or if upload elements exist
+    const dropZone = document.getElementById('drop-zone');
+    if (dropZone) {
+        window.uploadManager = new UploadManager();
+    }
+});
 
 console.log('Upload module loaded');

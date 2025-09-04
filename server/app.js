@@ -5,6 +5,7 @@ const path = require('path');
 require('dotenv').config();
 
 const apiRoutes = require('./routes/api');
+const authRoutes = require('./routes/auth');
 const { handleUploadErrors } = require('./middleware/uploadMiddleware');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
@@ -54,6 +55,7 @@ console.log('Serving static files from:', clientPath);
 app.use(express.static(clientPath));
 
 // API routes
+app.use('/api/auth', authRoutes);
 app.use('/api', apiRoutes);
 
 // Handle 404 for API routes

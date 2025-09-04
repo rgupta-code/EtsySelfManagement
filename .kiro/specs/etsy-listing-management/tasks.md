@@ -72,7 +72,7 @@
   - Write unit tests for API endpoints with service mocking
   - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-- [ ] 11. Create authentication endpoints and middleware
+- [x] 11. Create authentication endpoints and middleware
   - Implement Google OAuth endpoints for Drive access
   - Create Etsy OAuth endpoints for shop integration
   - Build authentication middleware for protected routes
@@ -96,14 +96,14 @@
   - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
 - [x] 14. Create frontend settings and configuration panel
-
   - Build settings interface for watermark customization
   - Implement collage layout preference controls
   - Add authentication status display and login buttons
   - Create form validation and settings persistence
   - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ] 15. Integrate frontend with backend API
+- [x] 15. Integrate frontend with backend API
+
   - Implement API client functions for upload and settings endpoints
   - Add proper error handling and response processing
   - Create real-time progress updates using fetch API
@@ -124,7 +124,9 @@
   - Implement test coverage reporting and validation
   - _Requirements: All requirements validation through testing_
 
-- [ ] 18. Set up development and build scripts
+- [-] 18. Set up development and build scripts
+
+
   - Create npm scripts for development server startup
   - Implement build process for frontend assets
   - Add test running and coverage reporting scripts

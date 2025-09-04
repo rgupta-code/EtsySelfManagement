@@ -22,14 +22,13 @@ class SettingsManager {
                 etsy: { connected: false, shopName: null }
             }
         };
-        this.init();
     }
 
-    init() {
-        this.loadSettings();
+    async init() {
+        await this.loadSettings();
         this.setupEventListeners();
         this.updatePreview();
-        this.checkAuthenticationStatus();
+        await this.checkAuthenticationStatus();
     }
 
     setupEventListeners() {
@@ -271,13 +270,12 @@ class SettingsManager {
             button.disabled = true;
             button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Connecting...';
             
-            // Redirect to Google OAuth
-            window.location.href = '/api/auth/google';
+            // Use API client to initiate Google OAuth
+            await window.apiClient.initiateGoogleAuth();
             
         } catch (error) {
             console.error('Google auth error:', error);
             this.showAuthError('Google Drive', error.message);
-        } finally {
             button.disabled = false;
             button.innerHTML = originalText;
         }
@@ -291,13 +289,12 @@ class SettingsManager {
             button.disabled = true;
             button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Connecting...';
             
-            // Redirect to Etsy OAuth
-            window.location.href = '/api/auth/etsy';
+            // Use API client to initiate Etsy OAuth
+            await window.apiClient.initiateEtsyAuth();
             
         } catch (error) {
             console.error('Etsy auth error:', error);
             this.showAuthError('Etsy', error.message);
-        } finally {
             button.disabled = false;
             button.innerHTML = originalText;
         }
@@ -305,9 +302,8 @@ class SettingsManager {
 
     async checkAuthenticationStatus() {
         try {
-            const response = await fetch('/api/auth/status');
-            if (response.ok) {
-                const status = await response.json();
+            const status = await window.apiClient.getAuthStatus();
+            if (status.success) {
                 this.updateAuthenticationUI(status);
             }
         } catch (error) {
@@ -320,7 +316,7 @@ class SettingsManager {
         const googleStatus = document.getElementById('google-status');
         const googleBtn = document.getElementById('google-auth-btn');
         
-        if (status.googleDrive?.connected) {
+        if (status.services?.googleDrive?.connected) {
             googleStatus.innerHTML = `
                 <span class="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
                 <span class="text-sm text-green-600">Connected</span>
@@ -330,14 +326,14 @@ class SettingsManager {
             googleBtn.classList.add('bg-green-600', 'hover:bg-green-700');
             googleBtn.disabled = true;
             
-            this.settings.authentication.googleDrive = status.googleDrive;
+            this.settings.authentication.googleDrive = status.services.googleDrive;
         }
         
         // Update Etsy status
         const etsyStatus = document.getElementById('etsy-status');
         const etsyBtn = document.getElementById('etsy-auth-btn');
         
-        if (status.etsy?.connected) {
+        if (status.services?.etsy?.connected) {
             etsyStatus.innerHTML = `
                 <span class="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
                 <span class="text-sm text-green-600">Connected</span>
@@ -347,7 +343,7 @@ class SettingsManager {
             etsyBtn.classList.add('bg-green-600', 'hover:bg-green-700');
             etsyBtn.disabled = true;
             
-            this.settings.authentication.etsy = status.etsy;
+            this.settings.authentication.etsy = status.services.etsy;
         }
     }
 
@@ -387,19 +383,8 @@ class SettingsManager {
             // Save to localStorage
             localStorage.setItem('etsyflow-settings', JSON.stringify(this.settings));
             
-            // Send to backend
-            const response = await fetch('/api/settings', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ settings: this.settings })
-            });
-            
-            if (!response.ok) {
-                const error = await response.json().catch(() => ({}));
-                throw new Error(error.message || 'Failed to save settings');
-            }
+            // Send to backend using API client
+            await window.apiClient.saveSettings(this.settings);
             
             this.showSaveSuccess();
             
@@ -481,8 +466,19 @@ class SettingsManager {
         }, 5000);
     }
 
-    loadSettings() {
+    async loadSettings() {
         try {
+            // Try to load from backend first
+            try {
+                const response = await window.apiClient.getSettings();
+                if (response.success && response.settings) {
+                    this.settings = { ...this.settings, ...response.settings };
+                }
+            } catch (apiError) {
+                console.warn('Could not load settings from backend, using local storage:', apiError);
+            }
+            
+            // Fallback to localStorage
             const saved = localStorage.getItem('etsyflow-settings');
             if (saved) {
                 const parsedSettings = JSON.parse(saved);
@@ -566,10 +562,11 @@ class SettingsManager {
 }
 
 // Initialize settings manager when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Only initialize if we're on the settings page
     if (document.getElementById('settings-page')) {
         window.settingsManager = new SettingsManager();
+        await window.settingsManager.init();
     }
 });
 

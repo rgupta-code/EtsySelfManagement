@@ -102,6 +102,14 @@ class EtsyService {
   }
 
   /**
+   * Set access token for authenticated requests
+   * @param {string} accessToken - Access token
+   */
+  setAccessToken(accessToken) {
+    this.accessToken = accessToken;
+  }
+
+  /**
    * Refresh access token using refresh token
    */
   async refreshAccessToken() {
@@ -133,6 +141,28 @@ class EtsyService {
       };
     } catch (error) {
       throw new Error(`Token refresh failed: ${error.response?.data?.error || error.message}`);
+    }
+  }
+
+  /**
+   * Get authenticated user information
+   */
+  async getUserInfo() {
+    if (!this.accessToken) {
+      throw new Error('Not authenticated with Etsy');
+    }
+
+    try {
+      const response = await axios.get(`${this.baseURL}/application/user`, {
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+          'x-api-key': this.clientId
+        }
+      });
+
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to get user info: ${error.response?.data?.error || error.message}`);
     }
   }
 
@@ -420,6 +450,14 @@ class EtsyService {
    */
   setShopId(shopId) {
     this.shopId = shopId;
+  }
+
+  /**
+   * Get shop name (convenience method)
+   * @returns {string|null} Shop name or null if not available
+   */
+  getShopName() {
+    return this.shopName || null;
   }
 }
 

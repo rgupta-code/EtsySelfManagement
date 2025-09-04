@@ -1,6 +1,7 @@
 const express = require('express');
 const { createCompleteUploadMiddleware } = require('../middleware/uploadMiddleware');
 const { APIError, asyncHandler, createExternalAPIError } = require('../middleware/errorHandler');
+const { optionalAuth, requireAuth, requireGoogleAuth, requireEtsyAuth } = require('../middleware/authMiddleware');
 const ImageService = require('../services/imageService');
 const FileService = require('../services/fileService');
 const GoogleDriveService = require('../services/googleDriveService');
@@ -58,7 +59,7 @@ function updateProcessingStatus(processingId, step, status, data = {}) {
  * Main upload processing endpoint
  * Orchestrates all services to process images and create listing
  */
-router.post('/upload', createCompleteUploadMiddleware('images', 10), asyncHandler(async (req, res) => {
+router.post('/upload', optionalAuth, createCompleteUploadMiddleware('images', 10), asyncHandler(async (req, res) => {
   const processingId = generateProcessingId();
   
   try {
@@ -78,7 +79,7 @@ router.post('/upload', createCompleteUploadMiddleware('images', 10), asyncHandle
     });
 
     // Continue processing asynchronously
-    processUploadAsync(processingId, req.files, req.body);
+    processUploadAsync(processingId, req.files, req.body, req.user);
 
   } catch (error) {
     console.error('Upload endpoint error:', error);
@@ -98,7 +99,7 @@ router.post('/upload', createCompleteUploadMiddleware('images', 10), asyncHandle
 /**
  * Asynchronous processing function
  */
-async function processUploadAsync(processingId, files, options = {}) {
+async function processUploadAsync(processingId, files, options = {}, user = null) {
   let tempDir = null;
   
   try {
@@ -124,7 +125,8 @@ async function processUploadAsync(processingId, files, options = {}) {
 
     // Step 2: Load user settings
     updateProcessingStatus(processingId, 'settings', 'started');
-    const settings = await settingsService.loadSettings(options.userId || 'default');
+    const userId = user?.id || options.userId || 'default';
+    const settings = await settingsService.loadSettings(userId);
     updateProcessingStatus(processingId, 'settings', 'completed');
 
     // Step 3: Process images (watermarking)
@@ -158,41 +160,30 @@ async function processUploadAsync(processingId, files, options = {}) {
       zipSize: zipBuffer.length
     });
 
-    // Step 6: Upload to Google Drive (if configured)
+    // Step 6: Upload to Google Drive (if configured and authenticated)
     let driveLink = null;
-    if (settings.googleDrive.autoUpload) {
+    if (settings.googleDrive.autoUpload && user?.session?.googleAuth) {
       updateProcessingStatus(processingId, 'drive_upload', 'started');
       try {
-        // Initialize Google Drive service if needed
-        if (process.env.GOOGLE_CLIENT_ID) {
-          await googleDriveService.initialize({
-            client_id: process.env.GOOGLE_CLIENT_ID,
-            client_secret: process.env.GOOGLE_CLIENT_SECRET,
-            redirect_uri: process.env.GOOGLE_REDIRECT_URI
-          });
-          
-          // Note: In a real implementation, you'd need to handle OAuth tokens
-          // For now, we'll skip if not authenticated
-          if (googleDriveService.isAuthenticated()) {
-            const uploadResult = await googleDriveService.uploadZipFile(
-              zipBuffer, 
-              `listing_${processingId}.zip`
-            );
-            driveLink = await googleDriveService.createShareableLink(uploadResult.fileId);
-            updateProcessingStatus(processingId, 'drive_upload', 'completed', {
-              fileId: uploadResult.fileId,
-              link: driveLink
-            });
-          } else {
-            updateProcessingStatus(processingId, 'drive_upload', 'skipped', {
-              reason: 'not_authenticated'
-            });
-          }
-        } else {
-          updateProcessingStatus(processingId, 'drive_upload', 'skipped', {
-            reason: 'not_configured'
-          });
-        }
+        // Initialize Google Drive service with user's tokens
+        await googleDriveService.initialize({
+          client_id: process.env.GOOGLE_CLIENT_ID,
+          client_secret: process.env.GOOGLE_CLIENT_SECRET,
+          redirect_uri: process.env.GOOGLE_REDIRECT_URI
+        });
+        
+        // Set user's access token
+        googleDriveService.setAccessToken(user.session.googleAuth.accessToken);
+        
+        const uploadResult = await googleDriveService.uploadZipFile(
+          zipBuffer, 
+          `listing_${processingId}.zip`
+        );
+        driveLink = await googleDriveService.createShareableLink(uploadResult.fileId);
+        updateProcessingStatus(processingId, 'drive_upload', 'completed', {
+          fileId: uploadResult.fileId,
+          link: driveLink
+        });
       } catch (error) {
         updateProcessingStatus(processingId, 'drive_upload', 'failed', {
           error: error.message
@@ -200,7 +191,7 @@ async function processUploadAsync(processingId, files, options = {}) {
       }
     } else {
       updateProcessingStatus(processingId, 'drive_upload', 'skipped', {
-        reason: 'disabled'
+        reason: !settings.googleDrive.autoUpload ? 'disabled' : 'not_authenticated'
       });
     }
 
@@ -228,53 +219,45 @@ async function processUploadAsync(processingId, files, options = {}) {
       };
     }
 
-    // Step 8: Create Etsy draft listing (if configured)
+    // Step 8: Create Etsy draft listing (if configured and authenticated)
     let etsyListing = null;
-    if (settings.etsy.autoDraft) {
+    if (settings.etsy.autoDraft && user?.session?.etsyAuth) {
       updateProcessingStatus(processingId, 'etsy_listing', 'started');
       try {
-        // Initialize Etsy service if needed
-        if (process.env.ETSY_CLIENT_ID) {
-          await etsyService.initialize({
-            client_id: process.env.ETSY_CLIENT_ID,
-            client_secret: process.env.ETSY_CLIENT_SECRET,
-            redirect_uri: process.env.ETSY_REDIRECT_URI
-          });
-          
-          if (etsyService.isAuthenticated()) {
-            const listingData = {
-              title: metadata.title,
-              description: metadata.description,
-              tags: metadata.tags,
-              price: options.price || 10.00, // Default price
-              quantity: options.quantity || 1
-            };
-            
-            etsyListing = await etsyService.createDraftListing(listingData);
-            
-            // Upload images to listing
-            if (watermarkResult.watermarkedImages.length > 0) {
-              const uploadedImages = await etsyService.uploadListingImages(
-                etsyListing.listingId,
-                watermarkResult.watermarkedImages
-              );
-              etsyListing.uploadedImages = uploadedImages;
-            }
-            
-            updateProcessingStatus(processingId, 'etsy_listing', 'completed', {
-              listingId: etsyListing.listingId,
-              editUrl: etsyListing.editUrl
-            });
-          } else {
-            updateProcessingStatus(processingId, 'etsy_listing', 'skipped', {
-              reason: 'not_authenticated'
-            });
-          }
-        } else {
-          updateProcessingStatus(processingId, 'etsy_listing', 'skipped', {
-            reason: 'not_configured'
-          });
+        // Initialize Etsy service with user's tokens
+        await etsyService.initialize({
+          client_id: process.env.ETSY_CLIENT_ID,
+          client_secret: process.env.ETSY_CLIENT_SECRET,
+          redirect_uri: process.env.ETSY_REDIRECT_URI
+        });
+        
+        // Set user's access token
+        etsyService.setAccessToken(user.session.etsyAuth.accessToken);
+        
+        const listingData = {
+          title: metadata.title,
+          description: metadata.description,
+          tags: metadata.tags,
+          price: options.price || 10.00, // Default price
+          quantity: options.quantity || 1,
+          shop_id: user.session.etsyAuth.shopId
+        };
+        
+        etsyListing = await etsyService.createDraftListing(listingData);
+        
+        // Upload images to listing
+        if (watermarkResult.watermarkedImages.length > 0) {
+          const uploadedImages = await etsyService.uploadListingImages(
+            etsyListing.listingId,
+            watermarkResult.watermarkedImages
+          );
+          etsyListing.uploadedImages = uploadedImages;
         }
+        
+        updateProcessingStatus(processingId, 'etsy_listing', 'completed', {
+          listingId: etsyListing.listingId,
+          editUrl: etsyListing.editUrl
+        });
       } catch (error) {
         updateProcessingStatus(processingId, 'etsy_listing', 'failed', {
           error: error.message
@@ -291,7 +274,7 @@ async function processUploadAsync(processingId, files, options = {}) {
       }
     } else {
       updateProcessingStatus(processingId, 'etsy_listing', 'skipped', {
-        reason: 'disabled'
+        reason: !settings.etsy.autoDraft ? 'disabled' : 'not_authenticated'
       });
     }
 
@@ -348,8 +331,8 @@ router.get('/status/:processingId', (req, res) => {
 /**
  * Settings endpoints
  */
-router.get('/settings', asyncHandler(async (req, res) => {
-  const userId = req.query.userId || 'default';
+router.get('/settings', optionalAuth, asyncHandler(async (req, res) => {
+  const userId = req.user?.id || req.query.userId || 'default';
   const settings = await settingsService.loadSettings(userId);
   
   res.json({
@@ -358,12 +341,12 @@ router.get('/settings', asyncHandler(async (req, res) => {
   });
 }));
 
-router.put('/settings', asyncHandler(async (req, res) => {
+router.put('/settings', optionalAuth, asyncHandler(async (req, res) => {
   if (!req.body.settings) {
     throw new APIError('Settings data is required', 400, 'MISSING_SETTINGS');
   }
   
-  const userId = req.body.userId || 'default';
+  const userId = req.user?.id || req.body.userId || 'default';
   const settings = await settingsService.saveSettings(req.body.settings, userId);
   
   res.json({
@@ -372,9 +355,9 @@ router.put('/settings', asyncHandler(async (req, res) => {
   });
 }));
 
-router.patch('/settings/:section', asyncHandler(async (req, res) => {
+router.patch('/settings/:section', optionalAuth, asyncHandler(async (req, res) => {
   const { section } = req.params;
-  const userId = req.body.userId || 'default';
+  const userId = req.user?.id || req.body.userId || 'default';
   const updates = req.body.updates;
   
   if (!updates) {
@@ -389,116 +372,7 @@ router.patch('/settings/:section', asyncHandler(async (req, res) => {
   });
 }));
 
-/**
- * Authentication status endpoint
- */
-router.get('/auth/status', asyncHandler(async (req, res) => {
-  const googleDriveStatus = {
-    connected: googleDriveService.isAuthenticated(),
-    email: googleDriveService.isAuthenticated() ? googleDriveService.getUserEmail() : null
-  };
-  
-  const etsyStatus = {
-    connected: etsyService.isAuthenticated(),
-    shopName: etsyService.isAuthenticated() ? etsyService.getShopName() : null
-  };
-  
-  res.json({
-    success: true,
-    googleDrive: googleDriveStatus,
-    etsy: etsyStatus
-  });
-}));
 
-/**
- * Authentication endpoints for Google Drive
- */
-router.get('/auth/google', asyncHandler(async (req, res) => {
-  if (!process.env.GOOGLE_CLIENT_ID) {
-    throw new APIError('Google OAuth not configured', 500, 'GOOGLE_OAUTH_NOT_CONFIGURED');
-  }
-  
-  await googleDriveService.initialize({
-    client_id: process.env.GOOGLE_CLIENT_ID,
-    client_secret: process.env.GOOGLE_CLIENT_SECRET,
-    redirect_uri: process.env.GOOGLE_REDIRECT_URI
-  });
-  
-  const authUrl = googleDriveService.getAuthUrl();
-  
-  res.json({
-    success: true,
-    authUrl
-  });
-}));
-
-router.get('/auth/google/callback', asyncHandler(async (req, res) => {
-  const { code } = req.query;
-  
-  if (!code) {
-    throw new APIError('Authorization code required', 400, 'MISSING_AUTH_CODE');
-  }
-  
-  try {
-    const tokens = await googleDriveService.authenticateWithCode(code);
-    
-    // In a real app, you'd store these tokens securely for the user
-    res.json({
-      success: true,
-      message: 'Google Drive authentication successful',
-      authenticated: true
-    });
-  } catch (error) {
-    throw createExternalAPIError('Google Drive', error);
-  }
-}));
-
-/**
- * Authentication endpoints for Etsy
- */
-router.get('/auth/etsy', asyncHandler(async (req, res) => {
-  if (!process.env.ETSY_CLIENT_ID) {
-    throw new APIError('Etsy OAuth not configured', 500, 'ETSY_OAUTH_NOT_CONFIGURED');
-  }
-  
-  await etsyService.initialize({
-    client_id: process.env.ETSY_CLIENT_ID,
-    client_secret: process.env.ETSY_CLIENT_SECRET,
-    redirect_uri: process.env.ETSY_REDIRECT_URI
-  });
-  
-  const authUrl = etsyService.getAuthUrl();
-  
-  res.json({
-    success: true,
-    authUrl
-  });
-}));
-
-router.get('/auth/etsy/callback', asyncHandler(async (req, res) => {
-  const { code } = req.query;
-  
-  if (!code) {
-    throw new APIError('Authorization code required', 400, 'MISSING_AUTH_CODE');
-  }
-  
-  try {
-    const tokens = await etsyService.authenticateWithCode(code);
-    const shop = await etsyService.getUserShop();
-    
-    res.json({
-      success: true,
-      message: 'Etsy authentication successful',
-      shop: {
-        id: shop.shop_id,
-        name: shop.shop_name
-      },
-      authenticated: true
-    });
-  } catch (error) {
-    throw createExternalAPIError('Etsy', error);
-  }
-}));
 
 /**
  * Health check endpoint

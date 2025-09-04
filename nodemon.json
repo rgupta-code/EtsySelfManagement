@@ -1,0 +1,29 @@
+{
+  "watch": [
+    "server/",
+    "client/",
+    ".env"
+  ],
+  "ext": "js,json,html,css",
+  "ignore": [
+    "node_modules/",
+    "coverage/",
+    "dist/",
+    "temp/",
+    "*.test.js",
+    "*.spec.js",
+    "__tests__/"
+  ],
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "delay": 1000,
+  "verbose": true,
+  "restartable": "rs",
+  "colours": true,
+  "legacyWatch": false,
+  "events": {
+    "restart": "echo '🔄 Server restarted due to file changes'",
+    "crash": "echo '💥 Server crashed - waiting for file changes before restart'"
+  }
+}
