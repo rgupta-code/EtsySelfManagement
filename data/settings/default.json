@@ -1,0 +1,40 @@
+{
+  "watermark": {
+    "text": "Updated Brand Name",
+    "position": "bottom-left",
+    "opacity": 0.8,
+    "fontSize": 32,
+    "color": "#FF0000",
+    "enabled": true
+  },
+  "collage": {
+    "layout": "grid",
+    "dimensions": {
+      "width": 1500,
+      "height": 1500
+    },
+    "spacing": 15,
+    "backgroundColor": "#FFFFFF",
+    "enabled": true
+  },
+  "googleDrive": {
+    "folderId": null,
+    "folderName": "Etsy Listings",
+    "autoUpload": true
+  },
+  "etsy": {
+    "shopId": null,
+    "defaultCategory": null,
+    "autoDraft": true
+  },
+  "processing": {
+    "imageQuality": 90,
+    "maxImageSize": 10485760,
+    "allowedFormats": [
+      "jpeg",
+      "jpg",
+      "png",
+      "webp"
+    ]
+  }
+}

@@ -58,14 +58,13 @@
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 7.1_
 
 - [x] 9. Implement user settings and configuration management
-
   - Create settings service for watermark and collage preferences
   - Build configuration storage and retrieval system
   - Implement settings validation and default value handling
   - Write unit tests for settings management functionality
   - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ] 10. Build main API endpoints and request orchestration
+- [x] 10. Build main API endpoints and request orchestration
   - Create Express router with main upload processing endpoint
   - Implement request orchestration that coordinates all services
   - Add progress tracking and status updates during processing
@@ -78,18 +77,19 @@
   - Create Etsy OAuth endpoints for shop integration
   - Build authentication middleware for protected routes
   - Add token refresh and session management
-  - Write unit tests for authentication flows
   - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-- [ ] 12. Build frontend upload interface
-  - Create HTML structure with drag-and-drop upload area
+- [x] 12. Build frontend upload interface
+  - Create modern looking HTML based UI/website with standard pages like about, home, contact us etc.
+  - Create a page with drag-and-drop upload area
   - Implement JavaScript for file selection and preview thumbnails
   - Add client-side file validation and error display
   - Style interface with Tailwind CSS for responsive design
   - _Requirements: 1.1, 1.4_
 
-- [ ] 13. Implement frontend progress tracking and results display
+- [x] 13. Implement frontend progress tracking and results display
   - Create progress indicator component with step-by-step updates
+
   - Build results display showing processed images, metadata, and links
   - Add error handling and user feedback for failed operations
   - Implement retry functionality for failed uploads

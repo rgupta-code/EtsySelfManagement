@@ -1,2 +1,500 @@
-// API routes will be implemented here
-console.log('API routes module loaded');
+const express = require('express');
+const { createCompleteUploadMiddleware } = require('../middleware/uploadMiddleware');
+const { APIError, asyncHandler, createExternalAPIError } = require('../middleware/errorHandler');
+const ImageService = require('../services/imageService');
+const FileService = require('../services/fileService');
+const GoogleDriveService = require('../services/googleDriveService');
+const AIService = require('../services/aiService');
+const EtsyService = require('../services/etsyService');
+const SettingsService = require('../services/settingsService');
+
+const router = express.Router();
+
+// Service instances
+const imageService = new ImageService();
+const fileService = FileService; // Singleton instance
+const googleDriveService = new GoogleDriveService();
+const aiService = new AIService();
+const etsyService = new EtsyService();
+const settingsService = new SettingsService();
+
+/**
+ * Progress tracking for processing requests
+ */
+const processingStatus = new Map();
+
+/**
+ * Generate unique processing ID
+ */
+function generateProcessingId() {
+  return `proc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+/**
+ * Update processing status
+ */
+function updateProcessingStatus(processingId, step, status, data = {}) {
+  const current = processingStatus.get(processingId) || {
+    id: processingId,
+    startTime: new Date().toISOString(),
+    steps: []
+  };
+  
+  current.steps.push({
+    step,
+    status,
+    timestamp: new Date().toISOString(),
+    ...data
+  });
+  
+  current.currentStep = step;
+  current.currentStatus = status;
+  
+  processingStatus.set(processingId, current);
+  return current;
+}
+
+/**
+ * Main upload processing endpoint
+ * Orchestrates all services to process images and create listing
+ */
+router.post('/upload', createCompleteUploadMiddleware('images', 10), asyncHandler(async (req, res) => {
+  const processingId = generateProcessingId();
+  
+  try {
+    // Initialize processing status
+    updateProcessingStatus(processingId, 'initialization', 'started', {
+      fileCount: req.files.length,
+      totalSize: req.uploadSummary.totalSize
+    });
+
+    // Send immediate response with processing ID
+    res.json({
+      success: true,
+      processingId,
+      message: 'Upload received, processing started',
+      fileCount: req.files.length,
+      estimatedTime: '2-5 minutes'
+    });
+
+    // Continue processing asynchronously
+    processUploadAsync(processingId, req.files, req.body);
+
+  } catch (error) {
+    console.error('Upload endpoint error:', error);
+    updateProcessingStatus(processingId, 'initialization', 'failed', {
+      error: error.message
+    });
+    
+    throw new APIError(
+      `Upload processing failed: ${error.message}`,
+      500,
+      'UPLOAD_PROCESSING_ERROR',
+      { processingId }
+    );
+  }
+}));
+
+/**
+ * Asynchronous processing function
+ */
+async function processUploadAsync(processingId, files, options = {}) {
+  let tempDir = null;
+  
+  try {
+    // Step 1: Validate and prepare images
+    updateProcessingStatus(processingId, 'validation', 'started');
+    
+    const validation = imageService.validateImageFiles(files);
+    if (validation.errors.length > 0) {
+      updateProcessingStatus(processingId, 'validation', 'completed_with_warnings', {
+        warnings: validation.errors,
+        validFileCount: validation.validFiles.length
+      });
+    } else {
+      updateProcessingStatus(processingId, 'validation', 'completed', {
+        validFileCount: validation.validFiles.length
+      });
+    }
+
+    const validFiles = validation.validFiles;
+    if (validFiles.length === 0) {
+      throw new Error('No valid images to process');
+    }
+
+    // Step 2: Load user settings
+    updateProcessingStatus(processingId, 'settings', 'started');
+    const settings = await settingsService.loadSettings(options.userId || 'default');
+    updateProcessingStatus(processingId, 'settings', 'completed');
+
+    // Step 3: Process images (watermarking)
+    updateProcessingStatus(processingId, 'watermarking', 'started');
+    const watermarkResult = await imageService.watermarkImages(validFiles, settings.watermark);
+    updateProcessingStatus(processingId, 'watermarking', 'completed', {
+      processedCount: watermarkResult.watermarkedImages.length,
+      errors: watermarkResult.errors
+    });
+
+    // Step 4: Create collage (if multiple images)
+    let collageBuffer = null;
+    if (validFiles.length >= 2 && settings.collage.enabled) {
+      updateProcessingStatus(processingId, 'collage', 'started');
+      try {
+        collageBuffer = await imageService.createCollage(validFiles, settings.collage);
+        updateProcessingStatus(processingId, 'collage', 'completed');
+      } catch (error) {
+        updateProcessingStatus(processingId, 'collage', 'failed', { error: error.message });
+      }
+    } else {
+      updateProcessingStatus(processingId, 'collage', 'skipped', {
+        reason: validFiles.length < 2 ? 'insufficient_images' : 'disabled'
+      });
+    }
+
+    // Step 5: Package original files
+    updateProcessingStatus(processingId, 'packaging', 'started');
+    const zipBuffer = await fileService.packageOriginals(validFiles, `listing_${processingId}`);
+    updateProcessingStatus(processingId, 'packaging', 'completed', {
+      zipSize: zipBuffer.length
+    });
+
+    // Step 6: Upload to Google Drive (if configured)
+    let driveLink = null;
+    if (settings.googleDrive.autoUpload) {
+      updateProcessingStatus(processingId, 'drive_upload', 'started');
+      try {
+        // Initialize Google Drive service if needed
+        if (process.env.GOOGLE_CLIENT_ID) {
+          await googleDriveService.initialize({
+            client_id: process.env.GOOGLE_CLIENT_ID,
+            client_secret: process.env.GOOGLE_CLIENT_SECRET,
+            redirect_uri: process.env.GOOGLE_REDIRECT_URI
+          });
+          
+          // Note: In a real implementation, you'd need to handle OAuth tokens
+          // For now, we'll skip if not authenticated
+          if (googleDriveService.isAuthenticated()) {
+            const uploadResult = await googleDriveService.uploadZipFile(
+              zipBuffer, 
+              `listing_${processingId}.zip`
+            );
+            driveLink = await googleDriveService.createShareableLink(uploadResult.fileId);
+            updateProcessingStatus(processingId, 'drive_upload', 'completed', {
+              fileId: uploadResult.fileId,
+              link: driveLink
+            });
+          } else {
+            updateProcessingStatus(processingId, 'drive_upload', 'skipped', {
+              reason: 'not_authenticated'
+            });
+          }
+        } else {
+          updateProcessingStatus(processingId, 'drive_upload', 'skipped', {
+            reason: 'not_configured'
+          });
+        }
+      } catch (error) {
+        updateProcessingStatus(processingId, 'drive_upload', 'failed', {
+          error: error.message
+        });
+      }
+    } else {
+      updateProcessingStatus(processingId, 'drive_upload', 'skipped', {
+        reason: 'disabled'
+      });
+    }
+
+    // Step 7: Generate AI metadata
+    updateProcessingStatus(processingId, 'ai_metadata', 'started');
+    let metadata = null;
+    try {
+      const imageBuffers = validFiles.map(file => file.buffer);
+      metadata = await aiService.generateMetadata(imageBuffers);
+      updateProcessingStatus(processingId, 'ai_metadata', 'completed', {
+        titleLength: metadata.title.length,
+        tagCount: metadata.tags.length,
+        descriptionLength: metadata.description.length
+      });
+    } catch (error) {
+      updateProcessingStatus(processingId, 'ai_metadata', 'failed', {
+        error: error.message
+      });
+      // Provide fallback metadata
+      metadata = {
+        title: 'Handmade Product - Please Edit Title',
+        tags: ['handmade', 'unique', 'gift', 'custom', 'artisan'],
+        description: 'Beautiful handmade product. Please add your own description.',
+        confidence: 0
+      };
+    }
+
+    // Step 8: Create Etsy draft listing (if configured)
+    let etsyListing = null;
+    if (settings.etsy.autoDraft) {
+      updateProcessingStatus(processingId, 'etsy_listing', 'started');
+      try {
+        // Initialize Etsy service if needed
+        if (process.env.ETSY_CLIENT_ID) {
+          await etsyService.initialize({
+            client_id: process.env.ETSY_CLIENT_ID,
+            client_secret: process.env.ETSY_CLIENT_SECRET,
+            redirect_uri: process.env.ETSY_REDIRECT_URI
+          });
+          
+          if (etsyService.isAuthenticated()) {
+            const listingData = {
+              title: metadata.title,
+              description: metadata.description,
+              tags: metadata.tags,
+              price: options.price || 10.00, // Default price
+              quantity: options.quantity || 1
+            };
+            
+            etsyListing = await etsyService.createDraftListing(listingData);
+            
+            // Upload images to listing
+            if (watermarkResult.watermarkedImages.length > 0) {
+              const uploadedImages = await etsyService.uploadListingImages(
+                etsyListing.listingId,
+                watermarkResult.watermarkedImages
+              );
+              etsyListing.uploadedImages = uploadedImages;
+            }
+            
+            updateProcessingStatus(processingId, 'etsy_listing', 'completed', {
+              listingId: etsyListing.listingId,
+              editUrl: etsyListing.editUrl
+            });
+          } else {
+            updateProcessingStatus(processingId, 'etsy_listing', 'skipped', {
+              reason: 'not_authenticated'
+            });
+          }
+        } else {
+          updateProcessingStatus(processingId, 'etsy_listing', 'skipped', {
+            reason: 'not_configured'
+          });
+        }
+      } catch (error) {
+        updateProcessingStatus(processingId, 'etsy_listing', 'failed', {
+          error: error.message
+        });
+        
+        // Create export data as fallback
+        etsyListing = etsyService.exportListingData({
+          title: metadata.title,
+          description: metadata.description,
+          tags: metadata.tags,
+          price: options.price || 10.00,
+          quantity: options.quantity || 1
+        }, watermarkResult.watermarkedImages);
+      }
+    } else {
+      updateProcessingStatus(processingId, 'etsy_listing', 'skipped', {
+        reason: 'disabled'
+      });
+    }
+
+    // Step 9: Finalize processing
+    updateProcessingStatus(processingId, 'finalization', 'completed', {
+      totalProcessingTime: Date.now() - new Date(processingStatus.get(processingId).startTime).getTime(),
+      results: {
+        processedImages: watermarkResult.watermarkedImages.length,
+        collageCreated: !!collageBuffer,
+        driveLink,
+        metadata,
+        etsyListing
+      }
+    });
+
+  } catch (error) {
+    console.error(`Processing error for ${processingId}:`, error);
+    updateProcessingStatus(processingId, 'error', 'failed', {
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  } finally {
+    // Cleanup temporary files
+    if (tempDir) {
+      try {
+        await fileService.cleanupTempFiles(tempDir);
+      } catch (cleanupError) {
+        console.error('Cleanup error:', cleanupError);
+      }
+    }
+  }
+}
+
+/**
+ * Get processing status endpoint
+ */
+router.get('/status/:processingId', (req, res) => {
+  const { processingId } = req.params;
+  const status = processingStatus.get(processingId);
+  
+  if (!status) {
+    return res.status(404).json({
+      success: false,
+      error: 'Processing ID not found'
+    });
+  }
+  
+  res.json({
+    success: true,
+    status
+  });
+});
+
+/**
+ * Settings endpoints
+ */
+router.get('/settings', asyncHandler(async (req, res) => {
+  const userId = req.query.userId || 'default';
+  const settings = await settingsService.loadSettings(userId);
+  
+  res.json({
+    success: true,
+    settings
+  });
+}));
+
+router.put('/settings', asyncHandler(async (req, res) => {
+  if (!req.body.settings) {
+    throw new APIError('Settings data is required', 400, 'MISSING_SETTINGS');
+  }
+  
+  const userId = req.body.userId || 'default';
+  const settings = await settingsService.saveSettings(req.body.settings, userId);
+  
+  res.json({
+    success: true,
+    settings
+  });
+}));
+
+router.patch('/settings/:section', asyncHandler(async (req, res) => {
+  const { section } = req.params;
+  const userId = req.body.userId || 'default';
+  const updates = req.body.updates;
+  
+  if (!updates) {
+    throw new APIError('Updates data is required', 400, 'MISSING_UPDATES');
+  }
+  
+  const settings = await settingsService.updateSettings(section, updates, userId);
+  
+  res.json({
+    success: true,
+    settings
+  });
+}));
+
+/**
+ * Authentication endpoints for Google Drive
+ */
+router.get('/auth/google', asyncHandler(async (req, res) => {
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    throw new APIError('Google OAuth not configured', 500, 'GOOGLE_OAUTH_NOT_CONFIGURED');
+  }
+  
+  await googleDriveService.initialize({
+    client_id: process.env.GOOGLE_CLIENT_ID,
+    client_secret: process.env.GOOGLE_CLIENT_SECRET,
+    redirect_uri: process.env.GOOGLE_REDIRECT_URI
+  });
+  
+  const authUrl = googleDriveService.getAuthUrl();
+  
+  res.json({
+    success: true,
+    authUrl
+  });
+}));
+
+router.get('/auth/google/callback', asyncHandler(async (req, res) => {
+  const { code } = req.query;
+  
+  if (!code) {
+    throw new APIError('Authorization code required', 400, 'MISSING_AUTH_CODE');
+  }
+  
+  try {
+    const tokens = await googleDriveService.authenticateWithCode(code);
+    
+    // In a real app, you'd store these tokens securely for the user
+    res.json({
+      success: true,
+      message: 'Google Drive authentication successful',
+      authenticated: true
+    });
+  } catch (error) {
+    throw createExternalAPIError('Google Drive', error);
+  }
+}));
+
+/**
+ * Authentication endpoints for Etsy
+ */
+router.get('/auth/etsy', asyncHandler(async (req, res) => {
+  if (!process.env.ETSY_CLIENT_ID) {
+    throw new APIError('Etsy OAuth not configured', 500, 'ETSY_OAUTH_NOT_CONFIGURED');
+  }
+  
+  await etsyService.initialize({
+    client_id: process.env.ETSY_CLIENT_ID,
+    client_secret: process.env.ETSY_CLIENT_SECRET,
+    redirect_uri: process.env.ETSY_REDIRECT_URI
+  });
+  
+  const authUrl = etsyService.getAuthUrl();
+  
+  res.json({
+    success: true,
+    authUrl
+  });
+}));
+
+router.get('/auth/etsy/callback', asyncHandler(async (req, res) => {
+  const { code } = req.query;
+  
+  if (!code) {
+    throw new APIError('Authorization code required', 400, 'MISSING_AUTH_CODE');
+  }
+  
+  try {
+    const tokens = await etsyService.authenticateWithCode(code);
+    const shop = await etsyService.getUserShop();
+    
+    res.json({
+      success: true,
+      message: 'Etsy authentication successful',
+      shop: {
+        id: shop.shop_id,
+        name: shop.shop_name
+      },
+      authenticated: true
+    });
+  } catch (error) {
+    throw createExternalAPIError('Etsy', error);
+  }
+}));
+
+/**
+ * Health check endpoint
+ */
+router.get('/health', (req, res) => {
+  res.json({
+    success: true,
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    services: {
+      imageProcessing: 'available',
+      fileManagement: 'available',
+      googleDrive: process.env.GOOGLE_CLIENT_ID ? 'configured' : 'not_configured',
+      etsy: process.env.ETSY_CLIENT_ID ? 'configured' : 'not_configured',
+      ai: process.env.GOOGLE_AI_API_KEY ? 'configured' : 'not_configured'
+    }
+  });
+});
+
+module.exports = router;

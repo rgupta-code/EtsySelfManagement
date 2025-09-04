@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node server/app.js",
     "dev": "nodemon server/app.js",
+    "dev:server": "nodemon server/app.js",
+    "dev:full": "npm run dev",
     "test": "jest",
     "test:watch": "jest --watch",
     "build": "echo 'Build process for frontend assets'",

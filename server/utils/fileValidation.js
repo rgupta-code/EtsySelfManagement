@@ -90,7 +90,7 @@ function validateFile(file) {
 
   // Check file size
   if (!isValidFileSize(file.size)) {
-    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    const sizeMB = file.size ? (file.size / (1024 * 1024)).toFixed(2) : 'unknown';
     return {
       isValid: false,
       error: `File size too large. Maximum allowed: 10MB. Received: ${sizeMB}MB`

@@ -4,7 +4,7 @@
   "description": "Monitors changes to tasks.md file and automatically updates corresponding GitHub issues when task statuses change to in-progress or completed",
   "version": "1",
   "when": {
-    "type": "fileEdited",
+    "type": "userTriggered",
     "patterns": [
       "tasks.md"
     ]
