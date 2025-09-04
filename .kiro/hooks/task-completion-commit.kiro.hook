@@ -4,7 +4,7 @@
   "description": "When a task is marked as completed in tasks.md, automatically stage all changes and ask the user for permission to commit them",
   "version": "1",
   "when": {
-    "type": "fileEdited",
+    "type": "userTriggered",
     "patterns": [
       ".kiro/specs/etsy-listing-management/tasks.md"
     ]

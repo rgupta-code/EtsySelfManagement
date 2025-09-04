@@ -41,7 +41,6 @@
   - _Requirements: 4.2, 4.3, 7.1, 7.2_
 
 - [x] 7. Build AI metadata generation service
-
   - Integrate Google Gemini AI for image analysis and metadata generation
   - Implement title generation (max 140 characters) based on image content
   - Create tag generation functionality (5-13 relevant tags)
@@ -49,8 +48,9 @@
   - Write unit tests with mocked AI responses
   - _Requirements: 5.1, 5.2, 5.3_
 
-- [ ] 8. Create Etsy API integration service
+- [x] 8. Create Etsy API integration service
   - Implement Etsy OAuth authentication for shop access
+
   - Build draft listing creation functionality with metadata
   - Add image upload capability for processed images
   - Create error handling for API failures with fallback data export
