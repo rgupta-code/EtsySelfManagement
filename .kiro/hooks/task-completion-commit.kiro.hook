@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Task Completion Commit",
+  "description": "When a task is marked as completed in tasks.md, automatically stage all changes and ask the user for permission to commit them",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      ".kiro/specs/etsy-listing-management/tasks.md"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A task has been marked as completed in the tasks.md file. Please stage all changes using git add and then ask the user for permission to commit these changes. Provide a clear summary of what task was completed and what files were changed before requesting commit approval."
+  }
+}
