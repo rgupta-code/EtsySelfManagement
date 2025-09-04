@@ -1,0 +1,47 @@
+{
+  "name": "etsy-listing-management",
+  "version": "1.0.0",
+  "description": "A self-management web application for Etsy sellers to streamline listing creation",
+  "main": "server/app.js",
+  "scripts": {
+    "start": "node server/app.js",
+    "dev": "nodemon server/app.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "build": "echo 'Build process for frontend assets'",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write ."
+  },
+  "keywords": [
+    "etsy",
+    "listing",
+    "management",
+    "image-processing",
+    "ai-metadata"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "sharp": "^0.33.0",
+    "googleapis": "^129.0.0",
+    "@google/generative-ai": "^0.2.1",
+    "etsy-api-v3": "^1.0.0",
+    "archiver": "^6.0.1",
+    "multer": "^1.4.5-lts.1",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.2",
+    "eslint": "^8.56.0",
+    "prettier": "^3.1.1",
+    "supertest": "^6.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
