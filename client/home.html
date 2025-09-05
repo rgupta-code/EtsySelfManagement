@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EtsyFlow - Streamline Your Etsy Listings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#f97316',
+              'primary-dark': '#ea580c',
+              'gray-50': '#f9fafb',
+              'gray-100': '#f3f4f6',
+              'gray-200': '#e5e7eb',
+              'gray-300': '#d1d5db',
+              'gray-400': '#9ca3af',
+              'gray-500': '#6b7280',
+              'gray-600': '#4b5563',
+              'gray-700': '#374151',
+              'gray-800': '#1f2937',
+              'gray-900': '#111827',
+            },
+          },
+        },
+      };
+    </script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <h1 class="text-2xl font-bold text-gray-900">
+                <i class="fas fa-store text-primary mr-2"></i>
+                EtsyFlow
+              </h1>
+            </div>
+          </div>
+          <div class="hidden md:block">
+            <div class="ml-10 flex items-baseline space-x-4">
+              <a
+                href="home.html"
+                class="nav-link text-gray-900 hover:text-primary px-3 py-2 rounded-2xl text-sm font-medium transition-colors"
+                >Home</a
+              >
+              <a
+                href="upload.html"
+                class="nav-link text-gray-500 hover:text-primary px-3 py-2 rounded-2xl text-sm font-medium transition-colors"
+                >Upload</a
+              >
+              <a
+                href="settings.html"
+                class="nav-link text-gray-500 hover:text-primary px-3 py-2 rounded-2xl text-sm font-medium transition-colors"
+                >Settings</a
+              >
+              <a
+                href="about.html"
+                class="nav-link text-gray-500 hover:text-primary px-3 py-2 rounded-2xl text-sm font-medium transition-colors"
+                >About</a
+              >
+              <a
+                href="contact.html"
+                class="nav-link text-gray-500 hover:text-primary px-3 py-2 rounded-2xl text-sm font-medium transition-colors"
+                >Contact</a
+              >
+            </div>
+          </div>
+          <div class="md:hidden">
+            <button
+              id="mobile-menu-button"
+              class="text-gray-500 hover:text-gray-900 focus:outline-none focus:text-gray-900"
+            >
+              <i class="fas fa-bars text-xl"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Mobile menu -->
+      <div id="mobile-menu" class="hidden md:hidden">
+        <div
+          class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-200"
+        >
+          <a
+            href="home.html"
+            class="nav-link block px-3 py-2 rounded-2xl text-base font-medium text-gray-900 hover:text-primary transition-colors"
+            >Home</a
+          >
+          <a
+            href="upload.html"
+            class="nav-link block px-3 py-2 rounded-2xl text-base font-medium text-gray-500 hover:text-primary transition-colors"
+            >Upload</a
+          >
+          <a
+            href="settings.html"
+            class="nav-link block px-3 py-2 rounded-2xl text-base font-medium text-gray-500 hover:text-primary transition-colors"
+            >Settings</a
+          >
+          <a
+            href="about.html"
+            class="nav-link block px-3 py-2 rounded-2xl text-base font-medium text-gray-500 hover:text-primary transition-colors"
+            >About</a
+          >
+          <a
+            href="contact.html"
+            class="nav-link block px-3 py-2 rounded-2xl text-base font-medium text-gray-500 hover:text-primary transition-colors"
+            >Contact</a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+      <!-- Hero Section -->
+      <div class="bg-gradient-to-br from-primary/10 to-orange-100 py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="text-center">
+            <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+              Streamline Your <span class="text-primary">Etsy Listings</span>
+            </h1>
+            <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+              Upload your product images and let AI create compelling listings
+              with watermarks, collages, and optimized metadata for your Etsy
+              shop.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+              <a
+                href="upload.html"
+                class="bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-2xl text-lg font-semibold transition-colors shadow-lg"
+              >
+                <i class="fas fa-upload mr-2"></i>
+                Start Upload
+              </a>
+              <a
+                href="about.html"
+                class="bg-white hover:bg-gray-50 text-gray-900 px-8 py-4 rounded-2xl text-lg font-semibold transition-colors border border-gray-300"
+              >
+                Learn More
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features Section -->
+      <div class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="text-center mb-16">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Everything You Need for Perfect Listings
+            </h2>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+              Our AI-powered platform handles the entire listing creation
+              process from image upload to draft publication.
+            </p>
+          </div>
+          <div class="grid md:grid-cols-3 gap-8">
+            <div class="text-center p-8 bg-gray-50 rounded-2xl">
+              <div
+                class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6"
+              >
+                <i class="fas fa-images text-2xl text-primary"></i>
+              </div>
+              <h3 class="text-xl font-semibold text-gray-900 mb-4">
+                Smart Image Processing
+              </h3>
+              <p class="text-gray-600">
+                Automatic watermarking and collage creation optimized for Etsy's
+                requirements.
+              </p>
+            </div>
+            <div class="text-center p-8 bg-gray-50 rounded-2xl">
+              <div
+                class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6"
+              >
+                <i class="fas fa-robot text-2xl text-primary"></i>
+              </div>
+              <h3 class="text-xl font-semibold text-gray-900 mb-4">
+                AI-Generated Content
+              </h3>
+              <p class="text-gray-600">
+                Compelling titles, descriptions, and tags created by advanced AI
+                analysis.
+              </p>
+            </div>
+            <div class="text-center p-8 bg-gray-50 rounded-2xl">
+              <div
+                class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6"
+              >
+                <i class="fas fa-link text-2xl text-primary"></i>
+              </div>
+              <h3 class="text-xl font-semibold text-gray-900 mb-4">
+                Seamless Integration
+              </h3>
+              <p class="text-gray-600">
+                Direct integration with Etsy and Google Drive for effortless
+                workflow.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid md:grid-cols-4 gap-8">
+          <div class="col-span-2">
+            <h3 class="text-2xl font-bold mb-4">
+              <i class="fas fa-store text-primary mr-2"></i>
+              EtsyFlow
+            </h3>
+            <p class="text-gray-400 mb-4">
+              Streamline your Etsy listing creation with AI-powered automation.
+              Save time, increase sales, and focus on what you do best -
+              creating amazing products.
+            </p>
+            <div class="flex space-x-4">
+              <a
+                href="#"
+                class="text-gray-400 hover:text-white transition-colors"
+              >
+                <i class="fab fa-twitter text-xl"></i>
+              </a>
+              <a
+                href="#"
+                class="text-gray-400 hover:text-white transition-colors"
+              >
+                <i class="fab fa-facebook text-xl"></i>
+              </a>
+              <a
+                href="#"
+                class="text-gray-400 hover:text-white transition-colors"
+              >
+                <i class="fab fa-instagram text-xl"></i>
+              </a>
+            </div>
+          </div>
+          <div>
+            <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+            <ul class="space-y-2">
+              <li>
+                <a
+                  href="home.html"
+                  class="text-gray-400 hover:text-white transition-colors"
+                  >Home</a
+                >
+              </li>
+              <li>
+                <a
+                  href="upload.html"
+                  class="text-gray-400 hover:text-white transition-colors"
+                  >Upload</a
+                >
+              </li>
+              <li>
+                <a
+                  href="about.html"
+                  class="text-gray-400 hover:text-white transition-colors"
+                  >About</a
+                >
+              </li>
+              <li>
+                <a
+                  href="contact.html"
+                  class="text-gray-400 hover:text-white transition-colors"
+                  >Contact</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-lg font-semibold mb-4">Support</h4>
+            <ul class="space-y-2">
+              <li>
+                <a
+                  href="#"
+                  class="text-gray-400 hover:text-white transition-colors"
+                  >Help Center</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="text-gray-400 hover:text-white transition-colors"
+                  >Privacy Policy</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="text-gray-400 hover:text-white transition-colors"
+                  >Terms of Service</a
+                >
+              </li>
+              <li>
+                <a
+                  href="contact.html"
+                  class="text-gray-400 hover:text-white transition-colors"
+                  >Contact Us</a
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="border-t border-gray-800 mt-8 pt-8 text-center">
+          <p class="text-gray-400">
+            © 2024 EtsyFlow. All rights reserved. Built with ❤️ for Etsy
+            sellers.
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="js/navigation.js"></script>
+  </body>
+</html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact - EtsyFlow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#f97316',
+                        'primary-dark': '#ea580c',
+                        'gray-50': '#f9fafb',
+                        'gray-100': '#f3f4f6',
+                        'gray-200': '#e5e7eb',
+                        'gray-300': '#d1d5db',
+                        'gray-400': '#9ca3af',
+                        'gray-500': '#6b7280',
+                        'gray-600': '#4b5563',
+                        'gray-700': '#374151',
+                        'gray-800': '#1f2937',
+                        'gray-900': '#111827'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold text-gray-900">
+                            <i class="fas fa-store text-primary mr-2"></i>
+                            EtsyFlow
+                        </h1>
+                    </div>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="home.html" class="nav-link text-gray-500 hover:text-primary px-3 py-2 rounded-2xl text-sm font-medium transition-colors">Home</a>
+                        <a href="upload.html" class="nav-link text-gray-500 hover:text-primary px-3 py-2 rounded-2xl text-sm font-medium transition-colors">Upload</a>
+                        <a href="settings.html" class="nav-link text-gray-500 hover:text-primary px-3 py-2 rounded-2xl text-sm font-medium transition-colors">Settings</a>
+                        <a href="about.html" class="nav-link text-gray-500 hover:text-primary px-3 py-2 rounded-2xl text-sm font-medium transition-colors">About</a>
+                        <a href="contact.html" class="nav-link text-gray-900 hover:text-primary px-3 py-2 rounded-2xl text-sm font-medium transition-colors">Contact</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-500 hover:text-gray-900 focus:outline-none focus:text-gray-900">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="hidden md:hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-200">
+                <a href="home.html" class="nav-link block px-3 py-2 rounded-2xl text-base font-medium text-gray-500 hover:text-primary transition-colors">Home</a>
+                <a href="upload.html" class="nav-link block px-3 py-2 rounded-2xl text-base font-medium text-gray-500 hover:text-primary transition-colors">Upload</a>
+                <a href="settings.html" class="nav-link block px-3 py-2 rounded-2xl text-base font-medium text-gray-500 hover:text-primary transition-colors">Settings</a>
+                <a href="about.html" class="nav-link block px-3 py-2 rounded-2xl text-base font-medium text-gray-500 hover:text-primary transition-colors">About</a>
+                <a href="contact.html" class="nav-link block px-3 py-2 rounded-2xl text-base font-medium text-gray-900 hover:text-primary transition-colors">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="text-center mb-12">
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    Get in Touch
+                </h1>
+                <p class="text-xl text-gray-600">
+                    We'd love to hear from you and help with your Etsy success
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Contact Form -->
+                <div class="bg-white rounded-2xl shadow-lg p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Send us a Message</h2>
+                    <form id="contact-form" class="space-y-6">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                            <input type="text" id="name" name="name" required 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent transition-colors">
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" id="email" name="email" required 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent transition-colors">
+                        </div>
+                        <div>
+                            <label for="subject" class="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                            <select id="subject" name="subject" required 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent transition-colors">
+                                <option value="">Select a topic</option>
+                                <option value="support">Technical Support</option>
+                                <option value="feature">Feature Request</option>
+                                <option value="billing">Billing Question</option>
+                                <option value="general">General Inquiry</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="message" class="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                            <textarea id="message" name="message" rows="4" required 
+                                      class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                                      placeholder="Tell us how we can help..."></textarea>
+                        </div>
+                        <button type="submit" 
+                                class="w-full bg-primary hover:bg-primary-dark text-white py-3 px-6 rounded-2xl font-semibold transition-colors">
+                            <i class="fas fa-paper-plane mr-2"></i>
+                            Send Message
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="space-y-8">
+                    <div class="bg-white rounded-2xl shadow-lg p-8">
+                        <h3 class="text-xl font-bold text-gray-900 mb-6">Contact Information</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center mr-4">
+                                    <i class="fas fa-envelope text-primary"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900">Email</p>
+                                    <p class="text-gray-600">support@etsyflow.com</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center mr-4">
+                                    <i class="fas fa-clock text-primary"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900">Support Hours</p>
+                                    <p class="text-gray-600">Monday - Friday, 9AM - 6PM EST</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center mr-4">
+                                    <i class="fas fa-headset text-primary"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900">Response Time</p>
+                                    <p class="text-gray-600">Usually within 24 hours</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-lg p-8">
+                        <h3 class="text-xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-medium text-gray-900 mb-1">Is my data secure?</h4>
+                                <p class="text-gray-600 text-sm">Yes, we use industry-standard encryption and never store your images permanently.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-900 mb-1">What file formats are supported?</h4>
+                                <p class="text-gray-600 text-sm">We support JPEG, PNG, and WebP formats up to 10MB per file.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-900 mb-1">How accurate is the AI content?</h4>
+                                <p class="text-gray-600 text-sm">Our AI is trained on successful Etsy listings and provides high-quality, editable content.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- JavaScript -->
+    <script src="js/navigation.js"></script>
+    <script>
+        // Contact form handling
+        document.getElementById('contact-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form data
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            
+            // Show success message (in a real app, this would send to a server)
+            alert('Thank you for your message! We\'ll get back to you soon.');
+            
+            // Reset form
+            this.reset();
+        });
+    </script>
+</body>
+</html>
