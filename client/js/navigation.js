@@ -7,7 +7,8 @@ class NavigationManager {
 
     init() {
         this.setupEventListeners();
-        this.showPage('home'); // Show home page by default
+        // Don't automatically show home page since we're using separate HTML files
+        // Each page will handle its own initialization
     }
 
     setupEventListeners() {
@@ -16,21 +17,34 @@ class NavigationManager {
         const mobileMenu = document.getElementById('mobile-menu');
 
         if (mobileMenuButton && mobileMenu) {
-            mobileMenuButton.addEventListener('click', () => {
+            mobileMenuButton.addEventListener('click', (e) => {
+                e.preventDefault();
                 mobileMenu.classList.toggle('hidden');
             });
         }
 
         // Navigation links
         const navLinks = document.querySelectorAll('.nav-link');
+        console.log('Found navigation links:', navLinks.length);
+        
         navLinks.forEach(link => {
             link.addEventListener('click', (e) => {
-                e.preventDefault();
                 const href = link.getAttribute('href');
+                console.log('Navigation link clicked:', href);
+                
+                // If it's a hash link (SPA navigation), prevent default and handle internally
                 if (href && href.startsWith('#')) {
+                    e.preventDefault();
                     const page = href.substring(1);
                     this.showPage(page);
                     
+                    // Close mobile menu if open
+                    if (mobileMenu) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                } else {
+                    // For regular HTML file links, let the browser handle navigation
+                    console.log('Allowing browser navigation to:', href);
                     // Close mobile menu if open
                     if (mobileMenu) {
                         mobileMenu.classList.add('hidden');
@@ -210,20 +224,23 @@ class NavigationManager {
 
     // Handle initial page load based on URL hash
     handleInitialLoad() {
+        // Only handle hash navigation if we're on a single-page app
+        // For separate HTML files, let the browser handle navigation normally
         const hash = window.location.hash;
         if (hash && hash.length > 1) {
             const page = hash.substring(1);
             this.showPage(page, false);
-        } else {
-            this.showPage('home', false);
         }
+        // Don't automatically show home page for separate HTML files
     }
 }
 
 // Initialize navigation manager when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing navigation...');
     window.navigationManager = new NavigationManager();
     window.navigationManager.handleInitialLoad();
+    console.log('Navigation manager initialized');
 });
 
 // Global function for showing pages (called from HTML)

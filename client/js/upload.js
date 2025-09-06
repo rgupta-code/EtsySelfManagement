@@ -24,37 +24,82 @@ class UploadManager {
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('file-input');
         const uploadButton = document.getElementById('upload-button');
+        
+        // Small upload area elements
+        const dropZoneSmall = document.getElementById('drop-zone-small');
+        const fileInputSmall = document.getElementById('file-input-small');
+        const uploadButtonSmall = document.getElementById('upload-button-small');
 
-        // Drop zone click handler
-        dropZone.addEventListener('click', () => {
-            fileInput.click();
-        });
+        // Main drop zone click handler
+        if (dropZone) {
+            dropZone.addEventListener('click', () => {
+                fileInput.click();
+            });
 
-        // File input change handler
-        fileInput.addEventListener('change', (e) => {
-            this.handleFiles(e.target.files);
-        });
+            // Drag and drop handlers for main area
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('border-primary', 'bg-primary/5');
+            });
 
-        // Drag and drop handlers
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('border-primary', 'bg-primary/5');
-        });
+            dropZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('border-primary', 'bg-primary/5');
+            });
 
-        dropZone.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('border-primary', 'bg-primary/5');
-        });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('border-primary', 'bg-primary/5');
+                this.handleFiles(e.dataTransfer.files);
+            });
+        }
 
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('border-primary', 'bg-primary/5');
-            this.handleFiles(e.dataTransfer.files);
-        });
+        // Small drop zone click handler
+        if (dropZoneSmall) {
+            dropZoneSmall.addEventListener('click', () => {
+                fileInputSmall.click();
+            });
 
-        // Upload button handler
+            // Drag and drop handlers for small area
+            dropZoneSmall.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZoneSmall.classList.add('border-primary', 'bg-primary/5');
+            });
+
+            dropZoneSmall.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropZoneSmall.classList.remove('border-primary', 'bg-primary/5');
+            });
+
+            dropZoneSmall.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZoneSmall.classList.remove('border-primary', 'bg-primary/5');
+                this.handleFiles(e.dataTransfer.files);
+            });
+        }
+
+        // File input change handlers
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                this.handleFiles(e.target.files);
+            });
+        }
+
+        if (fileInputSmall) {
+            fileInputSmall.addEventListener('change', (e) => {
+                this.handleFiles(e.target.files);
+            });
+        }
+
+        // Upload button handlers
         if (uploadButton) {
             uploadButton.addEventListener('click', () => {
+                this.processImages();
+            });
+        }
+
+        if (uploadButtonSmall) {
+            uploadButtonSmall.addEventListener('click', () => {
                 this.processImages();
             });
         }
@@ -82,6 +127,12 @@ class UploadManager {
             this.selectedFiles = [...this.selectedFiles, ...validFiles];
             this.updatePreview();
             this.hideErrors();
+            
+            // Show upload button in small area if we're in processing layout
+            const uploadButtonContainerSmall = document.getElementById('upload-button-container-small');
+            if (uploadButtonContainerSmall && !document.getElementById('processing-layout').classList.contains('hidden')) {
+                uploadButtonContainerSmall.classList.remove('hidden');
+            }
         }
     }
 
@@ -161,7 +212,7 @@ class UploadManager {
             
             reader.onload = (e) => {
                 const card = document.createElement('div');
-                card.className = 'bg-white rounded-2xl shadow-lg overflow-hidden relative group';
+                card.className = 'bg-white rounded-xl shadow-sm overflow-hidden relative group';
                 
                 const sizeKB = (file.size / 1024).toFixed(1);
                 
@@ -171,13 +222,13 @@ class UploadManager {
                              class="w-full h-full object-cover">
                         <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
                             <button onclick="uploadManager.removeFile('${file.name}')" 
-                                    class="bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600">
-                                <i class="fas fa-times text-sm"></i>
+                                    class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600">
+                                <i class="fas fa-times text-xs"></i>
                             </button>
                         </div>
                     </div>
-                    <div class="p-3">
-                        <p class="text-sm font-medium text-gray-900 truncate" title="${file.name}">
+                    <div class="p-2">
+                        <p class="text-xs font-medium text-gray-900 truncate" title="${file.name}">
                             ${file.name}
                         </p>
                         <p class="text-xs text-gray-500">${sizeKB} KB</p>
@@ -215,9 +266,11 @@ class UploadManager {
 
     async startProcessing() {
         try {
-            // Hide preview and show processing
-            document.getElementById('preview-container').classList.add('hidden');
-            document.getElementById('processing-container').classList.remove('hidden');
+            // Switch to processing layout
+            this.switchToProcessingLayout();
+            
+            // Show selected images in left panel
+            this.showSelectedImagesInLeftPanel();
             
             // Reset progress indicators
             this.resetProgressIndicators();
@@ -251,6 +304,42 @@ class UploadManager {
         } catch (error) {
             console.error('Upload error:', error);
             this.handleProcessingError(error);
+        }
+    }
+
+    switchToProcessingLayout() {
+        // Hide initial upload layout
+        document.getElementById('initial-upload-container').classList.add('hidden');
+        
+        // Show processing layout
+        document.getElementById('processing-layout').classList.remove('hidden');
+        
+        // Show processing container
+        document.getElementById('processing-container').classList.remove('hidden');
+    }
+
+    showSelectedImagesInLeftPanel() {
+        const selectedImagesDisplay = document.getElementById('selected-images-display');
+        const selectedImagesGrid = document.getElementById('selected-images-grid');
+        
+        if (this.selectedFiles.length > 0) {
+            selectedImagesGrid.innerHTML = '';
+            
+            this.selectedFiles.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const thumbnail = document.createElement('div');
+                    thumbnail.className = 'aspect-square rounded-lg overflow-hidden bg-gray-200';
+                    thumbnail.innerHTML = `
+                        <img src="${e.target.result}" alt="${file.name}" 
+                             class="w-full h-full object-cover">
+                    `;
+                    selectedImagesGrid.appendChild(thumbnail);
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            selectedImagesDisplay.classList.remove('hidden');
         }
     }
 
@@ -301,10 +390,107 @@ class UploadManager {
             // Update current step
             if (latestStep.status === 'started') {
                 this.updateProgressStep(frontendStep, 'in-progress');
+                
+                // Show specific previews based on step
+                if (latestStep.step === 'watermarking') {
+                    this.showWatermarkPreview();
+                } else if (latestStep.step === 'collage') {
+                    this.showCollagePreview();
+                }
             } else if (latestStep.status === 'completed') {
                 this.updateProgressStep(frontendStep, 'completed');
             } else if (latestStep.status === 'failed') {
                 this.updateProgressStep(frontendStep, 'error');
+            }
+        }
+    }
+
+    showWatermarkPreview() {
+        const watermarkPreview = document.getElementById('watermark-preview');
+        const watermarkedImagesGrid = document.getElementById('watermarked-images-grid');
+        
+        if (watermarkPreview) {
+            watermarkPreview.classList.remove('hidden');
+            
+            // Show watermarked images (simulated for now)
+            if (watermarkedImagesGrid && this.selectedFiles.length > 0) {
+                watermarkedImagesGrid.innerHTML = '';
+                
+                this.selectedFiles.forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const thumbnail = document.createElement('div');
+                        thumbnail.className = 'aspect-square rounded-lg overflow-hidden bg-gray-200 relative';
+                        thumbnail.innerHTML = `
+                            <img src="${e.target.result}" alt="Watermarked ${file.name}" 
+                                 class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                                <div class="bg-white bg-opacity-90 px-2 py-1 rounded text-xs font-medium text-gray-800">
+                                    Watermarked
+                                </div>
+                            </div>
+                        `;
+                        watermarkedImagesGrid.appendChild(thumbnail);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        }
+    }
+
+    showCollagePreview() {
+        const collagePreview = document.getElementById('collage-preview');
+        if (collagePreview) {
+            collagePreview.classList.remove('hidden');
+            
+            // Show collage preview (simulated for now)
+            const collageContainer = collagePreview.querySelector('.w-48.h-32');
+            if (collageContainer && this.selectedFiles.length > 0) {
+                collageContainer.innerHTML = '';
+                
+                // Create a simple grid collage preview
+                const grid = document.createElement('div');
+                grid.className = 'w-full h-full grid grid-cols-2 gap-1';
+                
+                // Show first 4 images in a 2x2 grid
+                const imagesToShow = this.selectedFiles.slice(0, 4);
+                imagesToShow.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = document.createElement('div');
+                        img.className = 'bg-gray-200 rounded overflow-hidden';
+                        img.innerHTML = `<img src="${e.target.result}" alt="${file.name}" class="w-full h-full object-cover">`;
+                        grid.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                });
+                
+                collageContainer.appendChild(grid);
+            }
+        }
+    }
+
+    resetProcessingContainerHeader() {
+        const processingContainer = document.getElementById('processing-container');
+        const header = processingContainer.querySelector('.text-center');
+        if (header) {
+            const icon = header.querySelector('.w-16.h-16');
+            const title = header.querySelector('h3');
+            const subtitle = header.querySelector('p');
+            
+            if (icon) {
+                icon.className = 'w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4';
+                icon.innerHTML = '<i class="fas fa-cog fa-spin text-2xl text-primary"></i>';
+            }
+            
+            if (title) {
+                title.textContent = 'Processing Your Images';
+                title.className = 'text-xl font-semibold text-gray-900 mb-2';
+            }
+            
+            if (subtitle) {
+                subtitle.textContent = 'Please wait while we process your images and create your listing...';
+                subtitle.className = 'text-gray-600';
             }
         }
     }
@@ -441,6 +627,17 @@ class UploadManager {
             // Start the step
             this.updateProgressStep(steps[i], 'in-progress');
             
+            // Show previews for processing step
+            if (steps[i] === 'processing') {
+                // Simulate watermarking first
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                this.showWatermarkPreview();
+                
+                // Then simulate collage creation
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                this.showCollagePreview();
+            }
+            
             // Simulate processing time
             await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
             
@@ -452,8 +649,36 @@ class UploadManager {
     // This method is replaced by pollProcessingStatusWithAPI
 
     showResults(result) {
-        document.getElementById('processing-container').classList.add('hidden');
+        // Keep processing container visible to show completed steps
+        // Just add results container below it
         document.getElementById('results-container').classList.remove('hidden');
+        
+        // Update the processing container header to show completion
+        const processingContainer = document.getElementById('processing-container');
+        const header = processingContainer.querySelector('.text-center');
+        if (header) {
+            const icon = header.querySelector('.w-12.h-12');
+            const title = header.querySelector('h3');
+            const subtitle = header.querySelector('p');
+            
+            if (icon) {
+                icon.className = 'w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4';
+                icon.innerHTML = '<i class="fas fa-check text-2xl text-green-600"></i>';
+            }
+            
+            if (title) {
+                title.textContent = 'Processing Complete!';
+                title.className = 'text-xl font-semibold text-green-900 mb-2';
+            }
+            
+            if (subtitle) {
+                subtitle.textContent = 'Your listing has been created successfully.';
+                subtitle.className = 'text-green-600';
+            }
+        }
+        
+        // Ensure processing container remains visible
+        processingContainer.classList.remove('hidden');
         
         const resultsContent = document.getElementById('results-content');
         
@@ -461,168 +686,168 @@ class UploadManager {
             // Show success animation
             this.showSuccessAnimation();
             
-            resultsContent.innerHTML = `
-                <div class="space-y-6">
-                    <!-- Processing Summary -->
-                    <div class="bg-green-50 border border-green-200 rounded-2xl p-6">
-                        <div class="flex items-center mb-4">
-                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4">
-                                <i class="fas fa-check text-green-600"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-semibold text-green-900">Processing Complete!</h4>
-                                <p class="text-green-700 text-sm">All ${this.selectedFiles.length} images processed successfully</p>
-                            </div>
-                        </div>
-                        ${result.processingId ? `
-                            <p class="text-green-600 text-xs font-mono">Processing ID: ${result.processingId}</p>
-                        ` : ''}
-                    </div>
+            // resultsContent.innerHTML = `
+            //     <div class="space-y-6">
+            //         <!-- Processing Summary -->
+            //         <div class="bg-green-50 border border-green-200 rounded-2xl p-6">
+            //             <div class="flex items-center mb-4">
+            //                 <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4">
+            //                     <i class="fas fa-check text-green-600"></i>
+            //                 </div>
+            //                 <div>
+            //                     <h4 class="font-semibold text-green-900">Processing Complete!</h4>
+            //                     <p class="text-green-700 text-sm">All ${this.selectedFiles.length} images processed successfully</p>
+            //                 </div>
+            //             </div>
+            //             ${result.processingId ? `
+            //                 <p class="text-green-600 text-xs font-mono">Processing ID: ${result.processingId}</p>
+            //             ` : ''}
+            //         </div>
 
-                    <!-- Assets Grid -->
-                    <div class="grid md:grid-cols-2 gap-6">
-                        <div class="bg-gray-50 rounded-2xl p-6">
-                            <h4 class="font-semibold text-gray-900 mb-4">
-                                <i class="fas fa-images text-primary mr-2"></i>
-                                Processed Images
-                            </h4>
-                            <div class="space-y-2">
-                                <p class="text-gray-600">
-                                    <i class="fas fa-check text-green-500 mr-2"></i>
-                                    ${result.assets?.watermarkedImages?.length || 0} watermarked images
-                                </p>
-                                ${result.assets?.collage ? `
-                                    <p class="text-gray-600">
-                                        <i class="fas fa-check text-green-500 mr-2"></i>
-                                        Product collage generated
-                                    </p>
-                                ` : ''}
-                                <p class="text-gray-600">
-                                    <i class="fas fa-check text-green-500 mr-2"></i>
-                                    Optimized for Etsy (2000x2000px)
-                                </p>
-                            </div>
-                        </div>
+            //         <!-- Assets Grid -->
+            //         <div class="grid md:grid-cols-2 gap-6">
+            //             <div class="bg-gray-50 rounded-2xl p-6">
+            //                 <h4 class="font-semibold text-gray-900 mb-4">
+            //                     <i class="fas fa-images text-primary mr-2"></i>
+            //                     Processed Images
+            //                 </h4>
+            //                 <div class="space-y-2">
+            //                     <p class="text-gray-600">
+            //                         <i class="fas fa-check text-green-500 mr-2"></i>
+            //                         ${result.assets?.watermarkedImages?.length || 0} watermarked images
+            //                     </p>
+            //                     ${result.assets?.collage ? `
+            //                         <p class="text-gray-600">
+            //                             <i class="fas fa-check text-green-500 mr-2"></i>
+            //                             Product collage generated
+            //                         </p>
+            //                     ` : ''}
+            //                     <p class="text-gray-600">
+            //                         <i class="fas fa-check text-green-500 mr-2"></i>
+            //                         Optimized for Etsy (2000x2000px)
+            //                     </p>
+            //                 </div>
+            //             </div>
                         
-                        <div class="bg-gray-50 rounded-2xl p-6">
-                            <h4 class="font-semibold text-gray-900 mb-4">
-                                <i class="fas fa-cloud text-primary mr-2"></i>
-                                File Storage
-                            </h4>
-                            ${result.assets?.originalZip ? `
-                                <div class="space-y-3">
-                                    <p class="text-gray-600">
-                                        <i class="fas fa-check text-green-500 mr-2"></i>
-                                        Original images backed up
-                                    </p>
-                                    <a href="${result.assets.originalZip}" target="_blank" 
-                                       class="inline-flex items-center text-primary hover:text-primary-dark font-medium transition-colors">
-                                        <i class="fas fa-download mr-2"></i>
-                                        Download ZIP Archive
-                                    </a>
-                                </div>
-                            ` : `
-                                <p class="text-gray-500">
-                                    <i class="fas fa-clock mr-2"></i>
-                                    Backup in progress...
-                                </p>
-                            `}
-                        </div>
-                    </div>
+            //             <div class="bg-gray-50 rounded-2xl p-6">
+            //                 <h4 class="font-semibold text-gray-900 mb-4">
+            //                     <i class="fas fa-cloud text-primary mr-2"></i>
+            //                     File Storage
+            //                 </h4>
+            //                 ${result.assets?.originalZip ? `
+            //                     <div class="space-y-3">
+            //                         <p class="text-gray-600">
+            //                             <i class="fas fa-check text-green-500 mr-2"></i>
+            //                             Original images backed up
+            //                         </p>
+            //                         <a href="${result.assets.originalZip}" target="_blank" 
+            //                            class="inline-flex items-center text-primary hover:text-primary-dark font-medium transition-colors">
+            //                             <i class="fas fa-download mr-2"></i>
+            //                             Download ZIP Archive
+            //                         </a>
+            //                     </div>
+            //                 ` : `
+            //                     <p class="text-gray-500">
+            //                         <i class="fas fa-clock mr-2"></i>
+            //                         Backup in progress...
+            //                     </p>
+            //                 `}
+            //             </div>
+            //         </div>
                     
-                    ${result.metadata ? `
-                        <div class="bg-gray-50 rounded-2xl p-6">
-                            <h4 class="font-semibold text-gray-900 mb-4">
-                                <i class="fas fa-robot text-primary mr-2"></i>
-                                AI-Generated Content
-                            </h4>
-                            <div class="space-y-4">
-                                <div>
-                                    <div class="flex items-center justify-between mb-2">
-                                        <h5 class="font-medium text-gray-900">Title</h5>
-                                        <span class="text-xs text-gray-500">${result.metadata.title?.length || 0}/140 chars</span>
-                                    </div>
-                                    <div class="bg-white p-3 rounded-xl border">
-                                        <p class="text-gray-700">${result.metadata.title}</p>
-                                        <button onclick="uploadManager.copyToClipboard('${result.metadata.title.replace(/'/g, "\\'")}', 'title')" 
-                                                class="text-xs text-primary hover:text-primary-dark mt-2">
-                                            <i class="fas fa-copy mr-1"></i>Copy
-                                        </button>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="flex items-center justify-between mb-2">
-                                        <h5 class="font-medium text-gray-900">Tags</h5>
-                                        <span class="text-xs text-gray-500">${result.metadata.tags?.length || 0} tags</span>
-                                    </div>
-                                    <div class="bg-white p-3 rounded-xl border">
-                                        <div class="flex flex-wrap gap-2 mb-2">
-                                            ${result.metadata.tags?.map(tag => 
-                                                `<span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">${tag}</span>`
-                                            ).join('') || ''}
-                                        </div>
-                                        <button onclick="uploadManager.copyToClipboard('${result.metadata.tags?.join(', ') || ''}', 'tags')" 
-                                                class="text-xs text-primary hover:text-primary-dark">
-                                            <i class="fas fa-copy mr-1"></i>Copy All Tags
-                                        </button>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="flex items-center justify-between mb-2">
-                                        <h5 class="font-medium text-gray-900">Description</h5>
-                                        <span class="text-xs text-gray-500">${result.metadata.description?.length || 0} chars</span>
-                                    </div>
-                                    <div class="bg-white p-3 rounded-xl border">
-                                        <p class="text-gray-700 text-sm whitespace-pre-wrap">${result.metadata.description}</p>
-                                        <button onclick="uploadManager.copyToClipboard('${result.metadata.description?.replace(/'/g, "\\'").replace(/\n/g, '\\n') || ''}', 'description')" 
-                                                class="text-xs text-primary hover:text-primary-dark mt-2">
-                                            <i class="fas fa-copy mr-1"></i>Copy Description
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ` : ''}
+            //         ${result.metadata ? `
+            //             <div class="bg-gray-50 rounded-2xl p-6">
+            //                 <h4 class="font-semibold text-gray-900 mb-4">
+            //                     <i class="fas fa-robot text-primary mr-2"></i>
+            //                     AI-Generated Content
+            //                 </h4>
+            //                 <div class="space-y-4">
+            //                     <div>
+            //                         <div class="flex items-center justify-between mb-2">
+            //                             <h5 class="font-medium text-gray-900">Title</h5>
+            //                             <span class="text-xs text-gray-500">${result.metadata.title?.length || 0}/140 chars</span>
+            //                         </div>
+            //                         <div class="bg-white p-3 rounded-xl border">
+            //                             <p class="text-gray-700">${result.metadata.title}</p>
+            //                             <button onclick="uploadManager.copyToClipboard('${result.metadata.title.replace(/'/g, "\\'")}', 'title')" 
+            //                                     class="text-xs text-primary hover:text-primary-dark mt-2">
+            //                                 <i class="fas fa-copy mr-1"></i>Copy
+            //                             </button>
+            //                         </div>
+            //                     </div>
+            //                     <div>
+            //                         <div class="flex items-center justify-between mb-2">
+            //                             <h5 class="font-medium text-gray-900">Tags</h5>
+            //                             <span class="text-xs text-gray-500">${result.metadata.tags?.length || 0} tags</span>
+            //                         </div>
+            //                         <div class="bg-white p-3 rounded-xl border">
+            //                             <div class="flex flex-wrap gap-2 mb-2">
+            //                                 ${result.metadata.tags?.map(tag =>
+            //     `<span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">${tag}</span>`
+            // ).join('') || ''}
+            //                             </div>
+            //                             <button onclick="uploadManager.copyToClipboard('${result.metadata.tags?.join(', ') || ''}', 'tags')" 
+            //                                     class="text-xs text-primary hover:text-primary-dark">
+            //                                 <i class="fas fa-copy mr-1"></i>Copy All Tags
+            //                             </button>
+            //                         </div>
+            //                     </div>
+            //                     <div>
+            //                         <div class="flex items-center justify-between mb-2">
+            //                             <h5 class="font-medium text-gray-900">Description</h5>
+            //                             <span class="text-xs text-gray-500">${result.metadata.description?.length || 0} chars</span>
+            //                         </div>
+            //                         <div class="bg-white p-3 rounded-xl border">
+            //                             <p class="text-gray-700 text-sm whitespace-pre-wrap">${result.metadata.description}</p>
+            //                             <button onclick="uploadManager.copyToClipboard('${result.metadata.description?.replace(/'/g, "\\'").replace(/\n/g, '\\n') || ''}', 'description')" 
+            //                                     class="text-xs text-primary hover:text-primary-dark mt-2">
+            //                                 <i class="fas fa-copy mr-1"></i>Copy Description
+            //                             </button>
+            //                         </div>
+            //                     </div>
+            //                 </div>
+            //             </div>
+            //         ` : ''}
                     
-                    ${result.etsyListing ? `
-                        <div class="bg-green-50 border border-green-200 rounded-2xl p-6">
-                            <h4 class="font-semibold text-green-900 mb-4">
-                                <i class="fab fa-etsy text-green-600 mr-2"></i>
-                                Etsy Draft Listing Created
-                            </h4>
-                            <div class="space-y-3">
-                                <p class="text-green-700">Your draft listing has been created and is ready for review.</p>
-                                <div class="flex gap-3">
-                                    <a href="${result.etsyListing.editUrl}" target="_blank" 
-                                       class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-2xl font-medium transition-colors inline-flex items-center">
-                                        <i class="fas fa-external-link-alt mr-2"></i>
-                                        Edit on Etsy
-                                    </a>
-                                    <button onclick="uploadManager.copyToClipboard('${result.etsyListing.editUrl}', 'listing-url')" 
-                                            class="bg-green-100 hover:bg-green-200 text-green-800 px-4 py-3 rounded-2xl font-medium transition-colors">
-                                        <i class="fas fa-copy mr-2"></i>
-                                        Copy Link
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    ` : ''}
+            //         ${result.etsyListing ? `
+            //             <div class="bg-green-50 border border-green-200 rounded-2xl p-6">
+            //                 <h4 class="font-semibold text-green-900 mb-4">
+            //                     <i class="fab fa-etsy text-green-600 mr-2"></i>
+            //                     Etsy Draft Listing Created
+            //                 </h4>
+            //                 <div class="space-y-3">
+            //                     <p class="text-green-700">Your draft listing has been created and is ready for review.</p>
+            //                     <div class="flex gap-3">
+            //                         <a href="${result.etsyListing.editUrl}" target="_blank" 
+            //                            class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-2xl font-medium transition-colors inline-flex items-center">
+            //                             <i class="fas fa-external-link-alt mr-2"></i>
+            //                             Edit on Etsy
+            //                         </a>
+            //                         <button onclick="uploadManager.copyToClipboard('${result.etsyListing.editUrl}', 'listing-url')" 
+            //                                 class="bg-green-100 hover:bg-green-200 text-green-800 px-4 py-3 rounded-2xl font-medium transition-colors">
+            //                             <i class="fas fa-copy mr-2"></i>
+            //                             Copy Link
+            //                         </button>
+            //                     </div>
+            //                 </div>
+            //             </div>
+            //         ` : ''}
 
-                    <!-- Action Buttons -->
-                    <div class="flex justify-center gap-4 pt-4">
-                        <button onclick="uploadManager.resetUpload()" 
-                                class="bg-gray-100 hover:bg-gray-200 text-gray-900 px-6 py-3 rounded-2xl font-medium transition-colors">
-                            <i class="fas fa-plus mr-2"></i>
-                            Process More Images
-                        </button>
-                        <button onclick="showPage('home')" 
-                                class="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-2xl font-medium transition-colors">
-                            <i class="fas fa-home mr-2"></i>
-                            Back to Home
-                        </button>
-                    </div>
-                </div>
-            `;
+            //         <!-- Action Buttons -->
+            //         <div class="flex justify-center gap-4 pt-4">
+            //             <button onclick="uploadManager.resetUpload()" 
+            //                     class="bg-gray-100 hover:bg-gray-200 text-gray-900 px-6 py-3 rounded-2xl font-medium transition-colors">
+            //                 <i class="fas fa-plus mr-2"></i>
+            //                 Process More Images
+            //             </button>
+            //             <button onclick="showPage('home')" 
+            //                     class="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-2xl font-medium transition-colors">
+            //                 <i class="fas fa-home mr-2"></i>
+            //                 Back to Home
+            //             </button>
+            //         </div>
+            //     </div>
+            // `;
         } else {
             this.showProcessingError(
                 result.message || 'There was an error processing your images. Please try again.',
@@ -809,12 +1034,32 @@ class UploadManager {
         // Reset all state
         this.selectedFiles = [];
         document.getElementById('file-input').value = '';
+        if (document.getElementById('file-input-small')) {
+            document.getElementById('file-input-small').value = '';
+        }
         
-        // Hide all sections except upload
+        // Switch back to initial layout
+        document.getElementById('initial-upload-container').classList.remove('hidden');
+        document.getElementById('processing-layout').classList.add('hidden');
+        
+        // Hide all sections in initial layout
         document.getElementById('preview-container').classList.add('hidden');
+        document.getElementById('error-container').classList.add('hidden');
+        
+        // Hide sections in processing layout
+        document.getElementById('selected-images-display').classList.add('hidden');
         document.getElementById('processing-container').classList.add('hidden');
         document.getElementById('results-container').classList.add('hidden');
-        document.getElementById('error-container').classList.add('hidden');
+        document.getElementById('upload-button-container-small').classList.add('hidden');
+        
+        // Reset processing container header
+        this.resetProcessingContainerHeader();
+        
+        // Hide preview sections
+        const watermarkPreview = document.getElementById('watermark-preview');
+        const collagePreview = document.getElementById('collage-preview');
+        if (watermarkPreview) watermarkPreview.classList.add('hidden');
+        if (collagePreview) collagePreview.classList.add('hidden');
         
         // Reset processing steps
         this.resetProgressIndicators();
@@ -827,11 +1072,6 @@ class UploadManager {
     }
 }
 
-// Initialize upload manager when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    window.uploadManager = new UploadManager();
-});
-
 // Global function for removing files (called from HTML)
 function resetUpload() {
     if (window.uploadManager) {
@@ -839,108 +1079,13 @@ function resetUpload() {
     }
 }
 
-console.log('Upload module loaded');    a
-sync retryProcessing() {
-        this.retryCount++;
-        this.hideErrors();
-        await this.startProcessing();
-    }
-
-    copyToClipboard(text, type) {
-        navigator.clipboard.writeText(text).then(() => {
-            // Show copy feedback
-            this.showCopyFeedback(type);
-        }).catch(err => {
-            console.error('Failed to copy text: ', err);
-            // Fallback for older browsers
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-            this.showCopyFeedback(type);
-        });
-    }
-
-    showCopyFeedback(type) {
-        // Create temporary feedback element
-        const feedback = document.createElement('div');
-        feedback.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-2xl text-sm font-medium copy-feedback z-50';
-        feedback.textContent = `${type.charAt(0).toUpperCase() + type.slice(1)} copied to clipboard!`;
-        
-        document.body.appendChild(feedback);
-        
-        setTimeout(() => {
-            feedback.remove();
-        }, 2000);
-    }
-
-    resetUpload() {
-        // Clear selected files
-        this.selectedFiles = [];
-        this.currentProcessingId = null;
-        this.retryCount = 0;
-        
-        // Reset file input
-        const fileInput = document.getElementById('file-input');
-        fileInput.value = '';
-        
-        // Hide all containers except upload
-        document.getElementById('preview-container').classList.add('hidden');
-        document.getElementById('processing-container').classList.add('hidden');
-        document.getElementById('results-container').classList.add('hidden');
-        document.getElementById('upload-container').classList.remove('hidden');
-        
-        // Clear any errors
-        this.hideErrors();
-    }
-
-    showProcessingError(message, showRetry = false) {
-        const errorContainer = document.getElementById('error-container');
-        const errorList = document.getElementById('error-list');
-        
-        errorList.innerHTML = `<p>• ${message}</p>`;
-        
-        if (showRetry && this.retryCount < this.maxRetries) {
-            errorList.innerHTML += `
-                <div class="mt-4">
-                    <button onclick="uploadManager.retryProcessing()" 
-                            class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-2xl text-sm font-medium transition-colors">
-                        <i class="fas fa-redo mr-2"></i>
-                        Retry (${this.maxRetries - this.retryCount} attempts left)
-                    </button>
-                </div>
-            `;
-        }
-        
-        errorContainer.classList.remove('hidden');
-        
-        // Hide processing container and show error
-        document.getElementById('processing-container').classList.add('hidden');
-    }
-}
-
 // Initialize upload manager when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    // Only initialize if we're on the upload page
-    if (document.getElementById('upload-page')) {
-        window.uploadManager = new UploadManager();
-    }
-});
-
-// Global function to reset upload (for use by other modules)
-function resetUpload() {
-    if (window.uploadManager) {
-        window.uploadManager.resetUpload();
-    }
-}
-
-// Initialize upload manager when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     // Only initialize if we're on the upload page or if upload elements exist
     const dropZone = document.getElementById('drop-zone');
-    if (dropZone) {
+    const fileInput = document.getElementById('file-input');
+    
+    if (dropZone && fileInput) {
         window.uploadManager = new UploadManager();
     }
 });

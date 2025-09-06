@@ -55,6 +55,11 @@ function isValidFileType(mimetype, originalname) {
  * @returns {boolean} - True if file size is valid
  */
 function isValidFileSize(size) {
+  // If size is not provided (e.g., during fileFilter), assume valid
+  // Multer will handle size validation with its limits configuration
+  if (size === undefined || size === null) {
+    return true;
+  }
   return typeof size === 'number' && size > 0 && size <= MAX_FILE_SIZE;
 }
 
@@ -88,9 +93,9 @@ function validateFile(file) {
     };
   }
 
-  // Check file size
-  if (!isValidFileSize(file.size)) {
-    const sizeMB = file.size ? (file.size / (1024 * 1024)).toFixed(2) : 'unknown';
+  // Check file size (only if size is available)
+  if (file.size !== undefined && file.size !== null && !isValidFileSize(file.size)) {
+    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
     return {
       isValid: false,
       error: `File size too large. Maximum allowed: 10MB. Received: ${sizeMB}MB`

@@ -128,6 +128,26 @@ function processUploadedFiles(req, res, next) {
   }
 
   try {
+    // Validate file sizes after multer processing
+    const fileSizeErrors = [];
+    req.files.forEach((file, index) => {
+      if (file.size > MAX_FILE_SIZE) {
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        fileSizeErrors.push({
+          filename: file.originalname,
+          error: `File size too large. Maximum allowed: 10MB. Received: ${sizeMB}MB`
+        });
+      }
+    });
+
+    if (fileSizeErrors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'File validation failed',
+        details: fileSizeErrors
+      });
+    }
+
     // Add metadata to each file
     req.files = req.files.map((file, index) => {
       // Generate unique ID for each file
