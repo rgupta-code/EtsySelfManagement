@@ -25,10 +25,16 @@ class SettingsManager {
     }
 
     async init() {
+        console.log('SettingsManager initializing...');
         await this.loadSettings();
+        console.log('Settings loaded, setting up event listeners...');
         this.setupEventListeners();
+        this.setupOAuthEventListeners();
+        console.log('Event listeners set up, updating preview...');
         this.updatePreview();
+        console.log('Preview updated, checking auth status...');
         await this.checkAuthenticationStatus();
+        console.log('SettingsManager initialization complete');
     }
 
     setupEventListeners() {
@@ -59,16 +65,26 @@ class SettingsManager {
         // Authentication buttons
         const googleAuthBtn = document.getElementById('google-auth-btn');
         if (googleAuthBtn) {
-            googleAuthBtn.addEventListener('click', () => {
+            console.log('Google auth button found, adding event listener');
+            googleAuthBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Google auth button clicked');
                 this.handleGoogleAuth();
             });
+        } else {
+            console.warn('Google auth button not found');
         }
 
         const etsyAuthBtn = document.getElementById('etsy-auth-btn');
         if (etsyAuthBtn) {
-            etsyAuthBtn.addEventListener('click', () => {
+            console.log('Etsy auth button found, adding event listener');
+            etsyAuthBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Etsy auth button clicked');
                 this.handleEtsyAuth();
             });
+        } else {
+            console.warn('Etsy auth button not found');
         }
 
         // Save settings button
@@ -115,6 +131,50 @@ class SettingsManager {
                 document.getElementById('spacing-value').textContent = e.target.value + 'px';
             });
         }
+    }
+
+    setupOAuthEventListeners() {
+        // Listen for OAuth success events
+        window.addEventListener('auth-success', (event) => {
+            console.log('OAuth success event received:', event.detail);
+            const { service } = event.detail;
+            
+            // Show success message
+            this.showAuthSuccess(service);
+            
+            // Refresh authentication status
+            this.checkAuthenticationStatus();
+        });
+
+        // Listen for OAuth error events
+        window.addEventListener('auth-error', (event) => {
+            console.log('OAuth error event received:', event.detail);
+            const { service, error } = event.detail;
+            
+            // Show error message
+            this.showAuthError(service, error);
+        });
+    }
+
+    showAuthSuccess(service) {
+        const statusDiv = document.getElementById('settings-status');
+        statusDiv.className = 'bg-green-50 border border-green-200 rounded-2xl p-4 mt-6';
+        statusDiv.innerHTML = `
+            <div class="flex">
+                <i class="fas fa-check-circle text-green-400 mr-3 mt-1"></i>
+                <div>
+                    <h3 class="text-sm font-medium text-green-800">${service} Connected Successfully</h3>
+                    <p class="mt-1 text-sm text-green-700">
+                        Your ${service} account has been connected successfully.
+                    </p>
+                </div>
+            </div>
+        `;
+        statusDiv.classList.remove('hidden');
+        
+        setTimeout(() => {
+            statusDiv.classList.add('hidden');
+        }, 5000);
     }
 
     handleWatermarkChange(e) {
@@ -270,6 +330,8 @@ class SettingsManager {
             button.disabled = true;
             button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Connecting...';
             
+            console.log('Initiating Google OAuth...');
+            
             // Use API client to initiate Google OAuth
             await window.apiClient.initiateGoogleAuth();
             
@@ -289,6 +351,8 @@ class SettingsManager {
             button.disabled = true;
             button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Connecting...';
             
+            console.log('Initiating Etsy OAuth...');
+            
             // Use API client to initiate Etsy OAuth
             await window.apiClient.initiateEtsyAuth();
             
@@ -302,7 +366,10 @@ class SettingsManager {
 
     async checkAuthenticationStatus() {
         try {
+            console.log('Checking authentication status...');
             const status = await window.apiClient.getAuthStatus();
+            console.log('Auth status response:', status);
+            
             if (status.success) {
                 this.updateAuthenticationUI(status);
             }
@@ -473,6 +540,7 @@ class SettingsManager {
                 const response = await window.apiClient.getSettings();
                 if (response.success && response.settings) {
                     this.settings = { ...this.settings, ...response.settings };
+                    console.log('Settings loaded from backend:', response.settings);
                 }
             } catch (apiError) {
                 console.warn('Could not load settings from backend, using local storage:', apiError);
@@ -481,8 +549,13 @@ class SettingsManager {
             // Fallback to localStorage
             const saved = localStorage.getItem('etsyflow-settings');
             if (saved) {
-                const parsedSettings = JSON.parse(saved);
-                this.settings = { ...this.settings, ...parsedSettings };
+                try {
+                    const parsedSettings = JSON.parse(saved);
+                    this.settings = { ...this.settings, ...parsedSettings };
+                    console.log('Settings loaded from localStorage:', parsedSettings);
+                } catch (parseError) {
+                    console.error('Error parsing saved settings:', parseError);
+                }
             }
             
             this.populateForm();
@@ -564,7 +637,20 @@ class SettingsManager {
 // Initialize settings manager when DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
     // Only initialize if we're on the settings page
-    if (document.getElementById('settings-page')) {
+    if (document.getElementById('settings-page') || document.querySelector('title')?.textContent?.includes('Settings')) {
+        // Wait for API client to be available
+        const waitForAPIClient = () => {
+            return new Promise((resolve) => {
+                if (window.apiClient) {
+                    resolve();
+                } else {
+                    setTimeout(() => waitForAPIClient().then(resolve), 100);
+                }
+            });
+        };
+        
+        await waitForAPIClient();
+        
         window.settingsManager = new SettingsManager();
         await window.settingsManager.init();
     }

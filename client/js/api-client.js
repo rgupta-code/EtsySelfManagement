@@ -499,20 +499,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const path = window.location.pathname;
 
-    if (path === '/auth/success') {
+    // Handle OAuth success/error from URL parameters
+    if (urlParams.get('auth') === 'success') {
         window.apiClient.handleAuthSuccess(urlParams);
-        // Redirect to settings page
-        window.history.replaceState({}, '', '/');
-        if (window.showPage) {
-            window.showPage('settings');
-        }
-    } else if (path === '/auth/error') {
+        // Clean up URL parameters
+        window.history.replaceState({}, '', path);
+    } else if (urlParams.get('auth') === 'error') {
         window.apiClient.handleAuthError(urlParams);
-        // Redirect to settings page
-        window.history.replaceState({}, '', '/');
-        if (window.showPage) {
-            window.showPage('settings');
-        }
+        // Clean up URL parameters
+        window.history.replaceState({}, '', path);
     }
 });
 

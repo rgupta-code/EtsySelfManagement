@@ -19,6 +19,12 @@ class GoogleDriveService {
       throw new Error('Invalid Google OAuth credentials provided');
     }
 
+    console.log('Initializing Google Drive Service with credentials:', {
+      client_id: credentials.client_id ? 'present' : 'missing',
+      client_secret: credentials.client_secret ? 'present' : 'missing',
+      redirect_uri: credentials.redirect_uri
+    });
+
     this.credentials = credentials;
     this.oauth2Client = new google.auth.OAuth2(
       credentials.client_id,
@@ -26,29 +32,53 @@ class GoogleDriveService {
       credentials.redirect_uri || 'http://localhost:3000/api/auth/google/callback'
     );
 
+    console.log('OAuth2 client created:', {
+      clientId: this.oauth2Client._clientId,
+      redirectUri: this.oauth2Client._redirectUri,
+      credentials: this.oauth2Client.credentials
+    });
+
     // Set up Drive API client
     this.drive = google.drive({ version: 'v3', auth: this.oauth2Client });
+    console.log('Drive API client created');
   }
 
   /**
    * Generate OAuth 2.0 authorization URL
+   * @param {string} state - Optional state parameter for security
    * @returns {string} Authorization URL for user consent
    */
-  getAuthUrl() {
+  getAuthUrl(state = null) {
     if (!this.oauth2Client) {
       throw new Error('OAuth client not initialized');
     }
 
+    console.log('GoogleDriveService.getAuthUrl called with state:', state);
+
     const scopes = [
       'https://www.googleapis.com/auth/drive.file',
-      'https://www.googleapis.com/auth/drive.readonly'
+      'https://www.googleapis.com/auth/drive.readonly',
+      'https://www.googleapis.com/auth/userinfo.email',
+      'https://www.googleapis.com/auth/userinfo.profile'
     ];
 
-    return this.oauth2Client.generateAuthUrl({
+    const authOptions = {
       access_type: 'offline',
       scope: scopes,
       prompt: 'consent'
-    });
+    };
+
+    // Add state parameter if provided
+    if (state) {
+      authOptions.state = state;
+      console.log('Added state to auth options:', state);
+    }
+
+    const authUrl = this.oauth2Client.generateAuthUrl(authOptions);
+    console.log('Generated Google auth URL:', authUrl);
+    console.log('Auth options used:', authOptions);
+
+    return authUrl;
   }
 
   /**
@@ -60,12 +90,27 @@ class GoogleDriveService {
       throw new Error('OAuth client not initialized');
     }
 
+    console.log('Authenticating with code:', code ? 'present' : 'missing');
+    console.log('OAuth client credentials before:', this.oauth2Client.credentials);
+
     try {
       const { tokens } = await this.oauth2Client.getToken(code);
+      console.log('Received tokens:', {
+        access_token: tokens.access_token ? 'present' : 'missing',
+        refresh_token: tokens.refresh_token ? 'present' : 'missing',
+        expires_in: tokens.expires_in,
+        token_type: tokens.token_type
+      });
+      
       this.oauth2Client.setCredentials(tokens);
       this.tokens = tokens;
+      
+      console.log('OAuth client credentials after:', this.oauth2Client.credentials);
+      console.log('Stored tokens:', this.tokens);
+      
       return tokens;
     } catch (error) {
+      console.error('Authentication error:', error);
       throw new Error(`Authentication failed: ${error.message}`);
     }
   }
@@ -299,6 +344,27 @@ class GoogleDriveService {
   }
 
   /**
+   * Verify access token is valid
+   * @param {string} accessToken - Access token to verify
+   * @returns {boolean} True if token is valid
+   */
+  async verifyAccessToken(accessToken) {
+    try {
+      const axios = require('axios');
+      const response = await axios.get('https://www.googleapis.com/oauth2/v1/tokeninfo', {
+        params: {
+          access_token: accessToken
+        }
+      });
+      console.log('Token verification successful:', response.data);
+      return true;
+    } catch (error) {
+      console.error('Token verification failed:', error.message);
+      return false;
+    }
+  }
+
+  /**
    * Get user information from Google
    * @returns {Object} User information
    */
@@ -307,11 +373,60 @@ class GoogleDriveService {
       throw new Error('OAuth client not initialized');
     }
 
+    console.log('Getting user info...');
+    console.log('OAuth client credentials:', this.oauth2Client.credentials);
+    console.log('Stored tokens:', this.tokens);
+
+    // First try: Use the stored access token directly
+    if (this.tokens?.access_token) {
+      console.log('Attempting direct API call with stored access token...');
+      console.log('Access token (first 20 chars):', this.tokens.access_token.substring(0, 20) + '...');
+      
+      // Verify token first
+      const isValid = await this.verifyAccessToken(this.tokens.access_token);
+      if (!isValid) {
+        console.error('Access token is invalid or expired');
+      } else {
+        try {
+          const axios = require('axios');
+          const response = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+            headers: {
+              'Authorization': `Bearer ${this.tokens.access_token}`
+            }
+          });
+          console.log('Direct API call successful:', response.data);
+          return response.data;
+        } catch (directError) {
+          console.error('Direct API call failed:', directError.message);
+          console.error('Direct API call error details:', {
+            status: directError.response?.status,
+            statusText: directError.response?.statusText,
+            data: directError.response?.data
+          });
+        }
+      }
+    } else {
+      console.log('No access token available in stored tokens');
+    }
+
+    // Second try: Use OAuth2 client
     try {
+      console.log('Attempting OAuth2 client method...');
       const oauth2 = google.oauth2({ version: 'v2', auth: this.oauth2Client });
+      console.log('Created OAuth2 client for userinfo');
+      
       const response = await oauth2.userinfo.get();
+      console.log('OAuth2 client method successful:', response.data);
+      
       return response.data;
     } catch (error) {
+      console.error('OAuth2 client method failed:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        status: error.status
+      });
+      
       throw new Error(`Failed to get user info: ${error.message}`);
     }
   }

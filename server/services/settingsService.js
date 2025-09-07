@@ -18,7 +18,7 @@ class SettingsService {
   getDefaultSettings() {
     return {
       watermark: {
-        text: 'Your Brand',
+        text: 'DigiGoods',
         position: 'bottom-right',
         opacity: 0.7,
         fontSize: 24,

@@ -105,6 +105,7 @@ async function processUploadAsync(processingId, files, options = {}, user = null
   try {
     // Step 1: Validate and prepare images
     updateProcessingStatus(processingId, 'validation', 'started');
+    console.log('***********Validating images***********');
     
     const validation = imageService.validateImageFiles(files);
     if (validation.errors.length > 0) {
@@ -123,6 +124,7 @@ async function processUploadAsync(processingId, files, options = {}, user = null
       throw new Error('No valid images to process');
     }
 
+    console.log('***********loading user settings***********');
     // Step 2: Load user settings
     updateProcessingStatus(processingId, 'settings', 'started');
     const userId = user?.id || options.userId || 'default';
@@ -201,6 +203,7 @@ async function processUploadAsync(processingId, files, options = {}, user = null
     try {
       const imageBuffers = validFiles.map(file => file.buffer);
       metadata = await aiService.generateMetadata(imageBuffers);
+      console.log('***********AI metadata***********', metadata);
       updateProcessingStatus(processingId, 'ai_metadata', 'completed', {
         titleLength: metadata.title.length,
         tagCount: metadata.tags.length,

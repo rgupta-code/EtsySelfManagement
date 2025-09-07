@@ -1,5 +1,6 @@
 const axios = require('axios');
 const FormData = require('form-data');
+const crypto = require('crypto');
 
 class EtsyService {
   constructor() {
@@ -27,14 +28,49 @@ class EtsyService {
   }
 
   /**
-   * Generate OAuth 2.0 authorization URL for Etsy
+   * Generate PKCE code verifier and challenge
+   * @returns {Object} PKCE parameters
+   */
+  generatePKCE() {
+    // Generate code verifier (43-128 characters, URL-safe)
+    const codeVerifier = crypto.randomBytes(32).toString('base64url');
+    
+    // Generate code challenge (SHA256 hash of verifier, base64url encoded)
+    const codeChallenge = crypto
+      .createHash('sha256')
+      .update(codeVerifier)
+      .digest('base64url');
+    
+    console.log('Generated PKCE parameters:', {
+      codeVerifier: codeVerifier.substring(0, 10) + '...',
+      codeChallenge: codeChallenge.substring(0, 10) + '...',
+      method: 'S256'
+    });
+    
+    return {
+      codeVerifier,
+      codeChallenge,
+      codeChallengeMethod: 'S256'
+    };
+  }
+
+  /**
+   * Generate OAuth 2.0 authorization URL for Etsy with PKCE
    * @param {string} state - Optional state parameter for security
-   * @returns {string} Authorization URL
+   * @returns {Object} Authorization URL and PKCE parameters
    */
   getAuthUrl(state = null) {
     if (!this.clientId) {
       throw new Error('Etsy client not initialized');
     }
+
+    console.log('Generating Etsy auth URL with:');
+    console.log('- Client ID:', this.clientId);
+    console.log('- Redirect URI:', this.redirectUri);
+    console.log('- State:', state);
+
+    // Generate PKCE parameters
+    const pkce = this.generatePKCE();
 
     const scopes = [
       'listings_r',
@@ -48,28 +84,63 @@ class EtsyService {
       client_id: this.clientId,
       redirect_uri: this.redirectUri,
       scope: scopes,
+      code_challenge: pkce.codeChallenge,
+      code_challenge_method: pkce.codeChallengeMethod,
       ...(state && { state })
     });
 
-    return `https://www.etsy.com/oauth/connect?${params.toString()}`;
+    const authUrl = `https://www.etsy.com/oauth/connect?${params.toString()}`;
+    
+    console.log('Generated Etsy auth URL with PKCE:', authUrl);
+    
+    return {
+      authUrl,
+      codeVerifier: pkce.codeVerifier,
+      codeChallenge: pkce.codeChallenge,
+      codeChallengeMethod: pkce.codeChallengeMethod
+    };
   }
 
   /**
-   * Exchange authorization code for access tokens
+   * Exchange authorization code for access tokens with PKCE
    * @param {string} code - Authorization code from OAuth callback
+   * @param {string} codeVerifier - PKCE code verifier
    */
-  async authenticateWithCode(code) {
+  async authenticateWithCode(code, codeVerifier) {
     if (!this.clientId || !this.clientSecret) {
       throw new Error('Etsy client not initialized');
     }
 
+    if (!codeVerifier) {
+      throw new Error('PKCE code verifier is required');
+    }
+
+    console.log('Etsy authentication with code and PKCE:', {
+      code: code ? 'present' : 'missing',
+      codeVerifier: codeVerifier ? 'present' : 'missing',
+      clientId: this.clientId ? 'present' : 'missing',
+      clientSecret: this.clientSecret ? 'present' : 'missing',
+      redirectUri: this.redirectUri
+    });
+
     try {
-      const response = await axios.post('https://api.etsy.com/v3/public/oauth/token', {
-        grant_type: 'authorization_code',
-        client_id: this.clientId,
-        code: code,
-        redirect_uri: this.redirectUri
-      }, {
+      // Etsy uses form data for token exchange with PKCE
+      const formData = new URLSearchParams();
+      formData.append('grant_type', 'authorization_code');
+      formData.append('client_id', this.clientId);
+      formData.append('code', code);
+      formData.append('redirect_uri', this.redirectUri);
+      formData.append('code_verifier', codeVerifier);
+
+      console.log('Sending token exchange request to Etsy with PKCE...');
+      console.log('Request URL: https://api.etsy.com/v3/public/oauth/token');
+      console.log('Request data:', formData.toString());
+      console.log('Request headers:', {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Basic ' + Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64')
+      });
+      
+      const response = await axios.post('https://api.etsy.com/v3/public/oauth/token', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
@@ -79,15 +150,33 @@ class EtsyService {
         }
       });
 
+      console.log('Etsy token exchange response status:', response.status);
+      console.log('Etsy token exchange response headers:', response.headers);
+      console.log('Etsy token exchange response data:', response.data);
+      console.log('Etsy token exchange successful:', {
+        access_token: response.data.access_token ? 'present' : 'missing',
+        refresh_token: response.data.refresh_token ? 'present' : 'missing',
+        expires_in: response.data.expires_in,
+        token_type: response.data.token_type
+      });
+
       this.accessToken = response.data.access_token;
       this.refreshToken = response.data.refresh_token;
       
       return {
         access_token: this.accessToken,
         refresh_token: this.refreshToken,
-        expires_in: response.data.expires_in
+        expires_in: response.data.expires_in,
+        token_type: response.data.token_type
       };
     } catch (error) {
+      console.error('Etsy authentication error:', error);
+      console.error('Error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
       throw new Error(`Etsy authentication failed: ${error.response?.data?.error || error.message}`);
     }
   }
@@ -152,7 +241,17 @@ class EtsyService {
       throw new Error('Not authenticated with Etsy');
     }
 
+    console.log('Getting Etsy user info...');
+    console.log('Access token (first 20 chars):', this.accessToken.substring(0, 20) + '...');
+    console.log('Client ID:', this.clientId);
+
     try {
+      console.log('Making request to:', `${this.baseURL}/application/user`);
+      console.log('Request headers:', {
+        'Authorization': `Bearer ${this.accessToken}`,
+        'x-api-key': this.clientId
+      });
+      
       const response = await axios.get(`${this.baseURL}/application/user`, {
         headers: {
           'Authorization': `Bearer ${this.accessToken}`,
@@ -160,8 +259,18 @@ class EtsyService {
         }
       });
 
+      console.log('Etsy user info response status:', response.status);
+      console.log('Etsy user info response headers:', response.headers);
+      console.log('Etsy user info response data:', response.data);
       return response.data;
     } catch (error) {
+      console.error('Etsy getUserInfo error:', error);
+      console.error('Error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
       throw new Error(`Failed to get user info: ${error.response?.data?.error || error.message}`);
     }
   }
@@ -174,6 +283,10 @@ class EtsyService {
       throw new Error('Not authenticated with Etsy');
     }
 
+    console.log('Getting Etsy user shop...');
+    console.log('Access token (first 20 chars):', this.accessToken.substring(0, 20) + '...');
+    console.log('Client ID:', this.clientId);
+
     try {
       const response = await axios.get(`${this.baseURL}/application/shops`, {
         headers: {
@@ -182,13 +295,27 @@ class EtsyService {
         }
       });
 
+      console.log('Etsy shops response:', response.data);
+
       if (response.data.results && response.data.results.length > 0) {
         this.shopId = response.data.results[0].shop_id;
+        console.log('Found shop:', {
+          shop_id: response.data.results[0].shop_id,
+          shop_name: response.data.results[0].shop_name,
+          url: response.data.results[0].url
+        });
         return response.data.results[0];
       }
 
       throw new Error('No shop found for authenticated user');
     } catch (error) {
+      console.error('Etsy getUserShop error:', error);
+      console.error('Error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
       throw new Error(`Failed to get user shop: ${error.response?.data?.error || error.message}`);
     }
   }
