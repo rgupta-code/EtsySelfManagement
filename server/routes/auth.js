@@ -439,16 +439,23 @@ router.get('/google/callback', asyncHandler(async (req, res) => {
     }
     
     // Store Google authentication in session
+    const googleAuthData = {
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      expiresAt: new Date(Date.now() + (tokens.expires_in * 1000)),
+      email: userInfo.email,
+      name: userInfo.name,
+      picture: userInfo.picture
+    };
+    
+    console.log('Storing Google auth data:', googleAuthData);
     updateUserSession(sessionData.userId, {
-      googleAuth: {
-        accessToken: tokens.access_token,
-        refreshToken: tokens.refresh_token,
-        expiresAt: new Date(Date.now() + (tokens.expires_in * 1000)),
-        email: userInfo.email,
-        name: userInfo.name,
-        picture: userInfo.picture
-      }
+      googleAuth: googleAuthData
     });
+    
+    // Verify the data was stored correctly
+    const storedSession = getUserSession(sessionData.userId);
+    console.log('Stored session after Google auth:', storedSession);
     
     // Redirect to frontend with success
     const redirectUrl = process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`;
@@ -618,17 +625,24 @@ router.get('/etsy/callback', asyncHandler(async (req, res) => {
     
     // Store Etsy authentication in session
     console.log('Storing Etsy authentication in session...');
+    const etsyAuthData = {
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      expiresAt: new Date(Date.now() + (tokens.expires_in * 1000)),
+      userId: userInfo.user_id,
+      shopId: shop.shop_id,
+      shopName: shop.shop_name,
+      shopUrl: shop.url
+    };
+    
+    console.log('Storing Etsy auth data:', etsyAuthData);
     updateUserSession(sessionData.userId, {
-      etsyAuth: {
-        accessToken: tokens.access_token,
-        refreshToken: tokens.refresh_token,
-        expiresAt: new Date(Date.now() + (tokens.expires_in * 1000)),
-        userId: userInfo.user_id,
-        shopId: shop.shop_id,
-        shopName: shop.shop_name,
-        shopUrl: shop.url
-      }
+      etsyAuth: etsyAuthData
     });
+    
+    // Verify the data was stored correctly
+    const storedSession = getUserSession(sessionData.userId);
+    console.log('Stored session after Etsy auth:', storedSession);
     console.log('Etsy authentication stored successfully');
     
     // Redirect to frontend with success
