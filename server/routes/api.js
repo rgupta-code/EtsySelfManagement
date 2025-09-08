@@ -105,7 +105,6 @@ async function processUploadAsync(processingId, files, options = {}, user = null
   try {
     // Step 1: Validate and prepare images
     updateProcessingStatus(processingId, 'validation', 'started');
-    console.log('***********Validating images***********');
     
     const validation = imageService.validateImageFiles(files);
     if (validation.errors.length > 0) {
@@ -203,7 +202,7 @@ async function processUploadAsync(processingId, files, options = {}, user = null
     try {
       const imageBuffers = validFiles.map(file => file.buffer);
       metadata = await aiService.generateMetadata(imageBuffers);
-      console.log('***********AI metadata***********', metadata);
+      //console.log('AI metadata', metadata);
       updateProcessingStatus(processingId, 'ai_metadata', 'completed', {
         titleLength: metadata.title.length,
         tagCount: metadata.tags.length,
@@ -245,11 +244,13 @@ async function processUploadAsync(processingId, files, options = {}, user = null
           quantity: options.quantity || 1,
           shop_id: user.session.etsyAuth.shopId
         };
-        
+
+        console.log('Listing data', listingData);        
         etsyListing = await etsyService.createDraftListing(listingData);
         
         // Upload images to listing
         if (watermarkResult.watermarkedImages.length > 0) {
+          console.log('Uploading images to listing');
           const uploadedImages = await etsyService.uploadListingImages(
             etsyListing.listingId,
             watermarkResult.watermarkedImages
@@ -266,6 +267,7 @@ async function processUploadAsync(processingId, files, options = {}, user = null
           error: error.message
         });
         
+        /*
         // Create export data as fallback
         etsyListing = etsyService.exportListingData({
           title: metadata.title,
@@ -274,6 +276,7 @@ async function processUploadAsync(processingId, files, options = {}, user = null
           price: options.price || 10.00,
           quantity: options.quantity || 1
         }, watermarkResult.watermarkedImages);
+        */
       }
     } else {
       updateProcessingStatus(processingId, 'etsy_listing', 'skipped', {

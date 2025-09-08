@@ -237,11 +237,14 @@ class EtsyService {
   }
 
   async createDraftListing(listingData) {
+    console.log('start draft listing', listingData);
     if (!this.accessToken || !this.shopId) {
+      console.log('Not authenticated with Etsy or shop not found');
       throw new Error("Not authenticated with Etsy or shop not found");
     }
 
     try {
+      console.log('Creating draft listing', listingData);
       const response = await axios.post(
         `${this.baseURL}/application/shops/${this.shopId}/listings`,
         {
@@ -265,6 +268,7 @@ class EtsyService {
           },
         }
       );
+      console.log('Draft listing created', response.data);
       return response.data;
     } catch (error) {
       throw new Error(

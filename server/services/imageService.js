@@ -116,7 +116,6 @@ class ImageService {
           originalSize: image.buffer.length,
           processedSize: watermarkedBuffer.length
         });
-        console.log('***********watermarked image successfully***********');
       } catch (error) {
         errors.push({
           index: i,
