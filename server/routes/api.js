@@ -244,8 +244,7 @@ async function processUploadAsync(processingId, files, options = {}, user = null
           quantity: options.quantity || 1,
           shop_id: user.session.etsyAuth.shopId
         };
-
-        console.log('Listing data', listingData);        
+      
         etsyListing = await etsyService.createDraftListing(listingData);
         
         // Upload images to listing

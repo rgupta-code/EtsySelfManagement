@@ -185,7 +185,7 @@ class EtsyService {
   
     try {
       const response = await axios.get(
-        `${this.baseURL}/application/shops?shop_name=`, // pass empty to let Etsy identify
+        `${this.baseURL}/application/shops?shop_name=DreamyDigiGoods`, // pass empty to let Etsy identify
         {
           headers: {
             Authorization: `Bearer ${this.accessToken}`,
@@ -237,14 +237,13 @@ class EtsyService {
   }
 
   async createDraftListing(listingData) {
-    console.log('start draft listing', listingData);
+    this.shopId = listingData.shop_id;
     if (!this.accessToken || !this.shopId) {
       console.log('Not authenticated with Etsy or shop not found');
       throw new Error("Not authenticated with Etsy or shop not found");
     }
 
     try {
-      console.log('Creating draft listing', listingData);
       const response = await axios.post(
         `${this.baseURL}/application/shops/${this.shopId}/listings`,
         {
@@ -259,6 +258,7 @@ class EtsyService {
           taxonomy_id: listingData.taxonomy_id || 1,
           shipping_template_id: listingData.shipping_template_id,
           materials: listingData.materials || [],
+          type: "download" 
         },
         {
           headers: {
@@ -280,6 +280,9 @@ class EtsyService {
   }
 
   async uploadListingImages(listingId, images) {
+    console.log('start upload listing images', listingId, images);
+    console.log('accessToken', this.accessToken);
+    console.log('shopId', this.shopId);
     if (!this.accessToken || !this.shopId) {
       throw new Error("Not authenticated with Etsy or shop not found");
     }

@@ -605,7 +605,7 @@ router.get('/etsy/callback', asyncHandler(async (req, res) => {
     // Get user shop
     console.log('Getting user shop...');
     const shop = await etsyService.getUserShop();
-    console.log('User shop retrieved successfully');
+    console.log('User shop retrieved successfully:', shop);
     
     let sessionData;
     

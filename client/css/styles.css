@@ -47,6 +47,57 @@
     }
 }
 
+/* OAuth Status Indicators */
+.oauth-status-dot {
+    transition: all 0.3s ease;
+}
+
+.oauth-status-dot.connected {
+    background-color: #10b981 !important; /* green-500 */
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.oauth-status-dot.disconnected {
+    background-color: #d1d5db !important; /* gray-300 */
+}
+
+.oauth-status-indicator {
+    transition: all 0.2s ease;
+}
+
+.oauth-status-indicator:hover {
+    transform: scale(1.05);
+}
+
+.oauth-status-text {
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.oauth-status-text.connected {
+    color: #059669 !important; /* green-600 */
+}
+
+.oauth-status-text.disconnected {
+    color: #6b7280 !important; /* gray-500 */
+}
+
+/* Pulse animation for connected status */
+@keyframes pulse-green {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
+}
+
+.oauth-status-dot.animate-pulse {
+    animation: pulse-green 2s infinite;
+}
+
 /* Results animation */
 .results-fade-in {
     animation: fadeInUp 0.5s ease-out;
