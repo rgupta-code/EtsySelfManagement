@@ -359,7 +359,6 @@ class EtsyService {
         );
       }
     }
-    console.log('uploaded', uploaded);
     return uploaded;
   }
 

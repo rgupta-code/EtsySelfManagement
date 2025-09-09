@@ -266,7 +266,6 @@ async function processUploadAsync(processingId, files, options = {}, user = null
         
         // Upload all images to listing
         if (imagesToUpload.length > 0) {
-          console.log('Uploading images to listing');
           const uploadedImages = await etsyService.uploadListingImages(
             etsyListing.listing_id,
             imagesToUpload
