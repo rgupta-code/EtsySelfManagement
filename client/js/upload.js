@@ -345,7 +345,7 @@ class UploadManager {
 
     async pollProcessingStatusWithAPI(processingId) {
         try {
-            await window.apiClient.pollProcessingStatus(
+            const finalStatus = await window.apiClient.pollProcessingStatus(
                 processingId,
                 (status) => {
                     // Update UI based on backend status
@@ -353,8 +353,11 @@ class UploadManager {
                 }
             );
             
-            // Mark all steps as completed when done
-            this.completeAllSteps();
+            // Only complete all steps if no steps failed
+            const hasFailedStep = finalStatus.steps && finalStatus.steps.some(step => step.status === 'failed');
+            if (!hasFailedStep) {
+                this.completeAllSteps();
+            }
             
         } catch (error) {
             console.error('Error polling status:', error);
@@ -375,6 +378,31 @@ class UploadManager {
             'ai_metadata': 'ai-generation',
             'etsy_listing': 'etsy-creation'
         };
+
+        // Check if any step has failed
+        const hasFailedStep = status.steps.some(step => step.status === 'failed');
+        
+        if (hasFailedStep) {
+            // Find the first failed step and stop processing
+            const failedStep = status.steps.find(step => step.status === 'failed');
+            const frontendStep = stepMapping[failedStep.step];
+            
+            if (frontendStep) {
+                // Mark all previous steps as completed
+                const stepIndex = this.processingSteps.findIndex(s => s.id === frontendStep);
+                for (let i = 0; i < stepIndex; i++) {
+                    this.updateProgressStep(this.processingSteps[i].id, 'completed');
+                }
+                
+                // Mark the failed step as error
+                this.updateProgressStep(frontendStep, 'error');
+                
+                // Show error message with step information and stop processing
+                const errorMessage = failedStep.error || `Step ${failedStep.step} failed`;
+                this.handleProcessingError(errorMessage, failedStep.step);
+                return;
+            }
+        }
 
         // Get the latest step
         const latestStep = status.steps[status.steps.length - 1];
@@ -401,6 +429,8 @@ class UploadManager {
                 this.updateProgressStep(frontendStep, 'completed');
             } else if (latestStep.status === 'failed') {
                 this.updateProgressStep(frontendStep, 'error');
+                const errorMessage = latestStep.error || `Step ${latestStep.step} failed`;
+                this.handleProcessingError(errorMessage, latestStep.step);
             }
         }
     }
@@ -570,6 +600,12 @@ class UploadManager {
     }
 
     completeAllSteps() {
+        // Check if any step has failed before completing all steps
+        const hasFailedStep = document.querySelector('.step-error') !== null;
+        if (hasFailedStep) {
+            return; // Don't complete steps if any have failed
+        }
+        
         this.processingSteps.forEach((step, index) => {
             setTimeout(() => {
                 this.updateProgressStep(step.id, 'completed');
@@ -594,15 +630,35 @@ class UploadManager {
         }
     }
 
-    handleProcessingError(error) {
+    handleProcessingError(error, failedStepName = null) {
         // Mark current step as error
         const currentStep = this.getCurrentProcessingStep();
         if (currentStep) {
             this.updateProgressStep(currentStep, 'error');
         }
 
+        // Create detailed error message with step information
+        let errorMessage = error.message || error;
+        if (failedStepName) {
+            const stepDisplayName = this.getStepDisplayName(failedStepName);
+            errorMessage = `Processing failed at step: ${stepDisplayName}\n\nError: ${errorMessage}`;
+        }
+
         // Show error with retry option
-        this.showProcessingError(error.message, true);
+        this.showProcessingError(errorMessage, true);
+    }
+
+    getStepDisplayName(stepName) {
+        const stepNames = {
+            'validation': 'Validating images',
+            'watermarking': 'Processing watermarks',
+            'collage': 'Creating collage',
+            'packaging': 'Packaging files',
+            'ai_metadata': 'Generating AI metadata',
+            'etsy_listing': 'Creating Etsy listing',
+            'drive_upload': 'Uploading to Google Drive'
+        };
+        return stepNames[stepName] || stepName;
     }
 
     getCurrentProcessingStep() {
@@ -649,6 +705,14 @@ class UploadManager {
     // This method is replaced by pollProcessingStatusWithAPI
 
     showResults(result) {
+        // Check if processing was successful
+        const hasFailedStep = document.querySelector('.step-error') !== null;
+        
+        if (hasFailedStep) {
+            // Don't show success results if there are failed steps
+            return;
+        }
+        
         // Keep processing container visible to show completed steps
         // Just add results container below it
         document.getElementById('results-container').classList.remove('hidden');
@@ -980,13 +1044,33 @@ class UploadManager {
         const resultsContent = document.getElementById('results-content');
         const canRetry = showRetry && this.retryCount < this.maxRetries;
         
+        // Parse the error message to extract step information
+        const stepMatch = errorMessage.match(/Processing failed at step: (.+?)\n\nError: (.+)/);
+        const stepName = stepMatch ? stepMatch[1] : null;
+        const actualError = stepMatch ? stepMatch[2] : errorMessage;
+        
         resultsContent.innerHTML = `
             <div class="bg-red-50 border border-red-200 rounded-2xl p-6">
                 <h4 class="font-semibold text-red-900 mb-4">
                     <i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>
                     Processing Failed
                 </h4>
-                <p class="text-red-700 mb-4">${errorMessage}</p>
+                ${stepName ? `
+                    <div class="bg-red-100 border border-red-300 rounded-xl p-4 mb-4">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-times-circle text-red-600 mr-2"></i>
+                            <span class="font-medium text-red-900">Failed Step:</span>
+                        </div>
+                        <p class="text-red-800 font-semibold">${stepName}</p>
+                    </div>
+                ` : ''}
+                <div class="bg-white border border-red-200 rounded-xl p-4 mb-4">
+                    <div class="flex items-center mb-2">
+                        <i class="fas fa-bug text-red-600 mr-2"></i>
+                        <span class="font-medium text-red-900">Error Details:</span>
+                    </div>
+                    <p class="text-red-700 text-sm whitespace-pre-wrap">${actualError}</p>
+                </div>
                 <div class="text-red-600 text-sm mb-4">
                     ${canRetry ? 
                         `<p>Attempt ${this.retryCount + 1} of ${this.maxRetries + 1} failed.</p>` :
