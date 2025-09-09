@@ -251,7 +251,7 @@ class EtsyService {
           description: listingData.description,
           tags: listingData.tags,
           price: listingData.price,
-          quantity: listingData.quantity || 1,
+          quantity: 100,//listingData.quantity || 1,
           state: "draft",
           who_made: listingData.who_made || "i_did",
           when_made: listingData.when_made || "2020_2024",
@@ -268,7 +268,6 @@ class EtsyService {
           },
         }
       );
-      console.log('Draft listing created', response.data);
       return response.data;
     } catch (error) {
       throw new Error(
@@ -279,10 +278,7 @@ class EtsyService {
     }
   }
 
-  async uploadListingImages(listingId, images) {
-    console.log('start upload listing images', listingId, images);
-    console.log('accessToken', this.accessToken);
-    console.log('shopId', this.shopId);
+  async uploadListingImagesOld(listingId, images) {
     if (!this.accessToken || !this.shopId) {
       throw new Error("Not authenticated with Etsy or shop not found");
     }
@@ -317,6 +313,54 @@ class EtsyService {
         );
       }
     }
+    return uploaded;
+  }
+
+  async uploadListingImages(listingId, images) {
+    if (!this.accessToken || !this.shopId) {
+      throw new Error("Not authenticated with Etsy or shop not found");
+    }
+    if (!images?.length) throw new Error("No images provided for upload");
+  
+    const uploaded = [];
+  
+    for (let i = 0; i < images.length; i++) {
+      const formData = new FormData();
+      const file = images[i];
+  
+      // Use stream if available, or buffer fallback
+      const stream = file.path ? fs.createReadStream(file.path) : file.buffer;
+      formData.append("image", file.buffer, {
+        filename: file.filename || `image_${i + 1}.jpg`,
+        contentType: file.mimeType || 'image/jpeg',
+      });
+  
+      // Add name field
+      formData.append('name', file.filename || `image_${i + 1}.jpg`);
+  
+      try {
+        const response = await axios.post(
+          `${this.baseURL}/application/shops/${this.shopId}/listings/${listingId}/images`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${this.accessToken}`,
+              'x-api-key': this.clientId,
+              ...formData.getHeaders(),
+            },
+          }
+        );
+        uploaded.push(response.data);
+      } catch (error) {
+        console.log('Upload listing images error', error);
+        throw new Error(
+          `Failed to upload image ${i + 1}: ${
+            error.response?.data?.error || error.message
+          }`
+        );
+      }
+    }
+    console.log('uploaded', uploaded);
     return uploaded;
   }
 

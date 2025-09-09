@@ -246,12 +246,11 @@ async function processUploadAsync(processingId, files, options = {}, user = null
         };
       
         etsyListing = await etsyService.createDraftListing(listingData);
-        
         // Upload images to listing
         if (watermarkResult.watermarkedImages.length > 0) {
-          console.log('Uploading images to listing');
+          
           const uploadedImages = await etsyService.uploadListingImages(
-            etsyListing.listingId,
+            etsyListing.listing_id,
             watermarkResult.watermarkedImages
           );
           etsyListing.uploadedImages = uploadedImages;
