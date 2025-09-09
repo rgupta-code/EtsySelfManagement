@@ -53,18 +53,7 @@
                     <a href="generate.html" class="text-primary font-medium"><i class="fas fa-magic mr-2"></i>AI</a>
                     <a href="settings.html" class="text-gray-600 hover:text-primary transition-colors"><i class="fas fa-cog mr-2"></i>Settings</a>
                     <a href="about.html" class="text-gray-600 hover:text-primary transition-colors"><i class="fas fa-info-circle mr-2"></i>About</a>
-                    
-                    <!-- OAuth Status Indicators -->
-                    <div class="flex items-center space-x-4">
-                        <div class="flex items-center space-x-2">
-                            <div id="google-status-dot" class="oauth-status-dot w-3 h-3 rounded-full bg-gray-400"></div>
-                            <span id="google-status-text" class="oauth-status-text text-xs text-gray-600 font-medium">Google Drive ✗</span>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <div id="etsy-status-dot" class="oauth-status-dot w-3 h-3 rounded-full bg-gray-400"></div>
-                            <span id="etsy-status-text" class="oauth-status-text text-xs text-gray-600 font-medium">Etsy ✗</span>
-                        </div>
-                    </div>
+                    <a href="contact.html" class="text-gray-600 hover:text-primary transition-colors"><i class="fas fa-envelope mr-2"></i>Contact</a>
                 </div>
 
                 <!-- Mobile menu button -->
@@ -84,26 +73,32 @@
                 <a href="generate.html" class="block px-3 py-2 text-primary font-medium"><i class="fas fa-magic mr-2"></i>AI</a>
                 <a href="settings.html" class="block px-3 py-2 text-gray-600 hover:text-primary transition-colors"><i class="fas fa-cog mr-2"></i>Settings</a>
                 <a href="about.html" class="block px-3 py-2 text-gray-600 hover:text-primary transition-colors"><i class="fas fa-info-circle mr-2"></i>About</a>
-                
-                <!-- Mobile OAuth Status -->
-                <div class="px-3 py-2 border-t border-gray-200">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-2">
-                            <div id="google-status-dot-mobile" class="oauth-status-dot w-3 h-3 rounded-full bg-gray-400"></div>
-                            <span id="google-status-text-mobile" class="oauth-status-text text-xs text-gray-600 font-medium">Google Drive ✗</span>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <div id="etsy-status-dot-mobile" class="oauth-status-dot w-3 h-3 rounded-full bg-gray-400"></div>
-                            <span id="etsy-status-text-mobile" class="oauth-status-text text-xs text-gray-600 font-medium">Etsy ✗</span>
-                        </div>
-                    </div>
-                </div>
+                <a href="contact.html" class="block px-3 py-2 text-gray-600 hover:text-primary transition-colors"><i class="fas fa-envelope mr-2"></i>Contact</a>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- OAuth Status Indicators -->
+        <div class="flex items-center justify-center space-x-4 mb-4">
+            <!-- Google Drive Status -->
+            <div id="google-status-indicator" class="oauth-status-indicator" title="Google Drive Status">
+                <div class="px-3 py-0.5 rounded-full bg-gray-200 oauth-status-capsule flex items-center space-x-2" id="google-status-capsule">
+                    <i class="fas fa-times text-xs" id="google-status-icon"></i>
+                    <span class="text-xs font-medium" id="google-status-text">Google Drive</span>
+                </div>
+            </div>
+            
+            <!-- Etsy Status -->
+            <div id="etsy-status-indicator" class="oauth-status-indicator" title="Etsy Status">
+                <div class="px-3 py-0.5 rounded-full bg-gray-200 oauth-status-capsule flex items-center space-x-2" id="etsy-status-capsule">
+                    <i class="fas fa-times text-xs" id="etsy-status-icon"></i>
+                    <span class="text-xs font-medium" id="etsy-status-text">Etsy</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Page Header -->
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-gray-900 mb-4">AI Image Generator</h1>

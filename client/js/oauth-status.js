@@ -43,52 +43,42 @@ class OAuthStatusManager {
     }
 
     setStatusIndicators(googleConnected, etsyConnected) {
-        // Update desktop indicators
-        this.updateStatusDot('google-status-dot', googleConnected);
-        this.updateStatusDot('etsy-status-dot', etsyConnected);
-        
-        // Update mobile indicators
-        this.updateStatusDot('mobile-google-status-dot', googleConnected);
-        this.updateStatusDot('mobile-etsy-status-dot', etsyConnected);
-        
-        // Update status text
-        this.updateStatusText('google-status-text', googleConnected ? 'Google Drive ✓' : 'Google Drive ✗');
-        this.updateStatusText('etsy-status-text', etsyConnected ? 'Etsy ✓' : 'Etsy ✗');
-        
-        // Update mobile status text
-        this.updateStatusText('mobile-google-status-text', googleConnected ? 'Google Drive ✓' : 'Google Drive ✗');
-        this.updateStatusText('mobile-etsy-status-text', etsyConnected ? 'Etsy ✓' : 'Etsy ✗');
+        // Update status indicators
+        this.updateStatusCapsule('google-status-capsule', 'google-status-icon', googleConnected);
+        this.updateStatusCapsule('etsy-status-capsule', 'etsy-status-icon', etsyConnected);
     }
 
-    updateStatusDot(elementId, isConnected) {
-        const dot = document.getElementById(elementId);
-        if (dot) {
+    updateStatusCapsule(capsuleId, iconId, isConnected) {
+        const capsule = document.getElementById(capsuleId);
+        const icon = document.getElementById(iconId);
+        
+        if (capsule && icon) {
             // Reset classes
-            dot.className = 'w-2 h-2 rounded-full oauth-status-dot';
+            capsule.className = 'px-3 py-0.5 rounded-full oauth-status-capsule flex items-center space-x-2';
+            icon.className = 'fas text-xs';
             
-            // Add status class
             if (isConnected) {
-                dot.classList.add('connected', 'animate-pulse');
+                // Connected state - dark green background with white text and check icon
+                capsule.classList.add('bg-green-600', 'border', 'border-green-700');
+                icon.classList.add('fa-check', 'text-white');
+                // Update text color to white
+                const textElement = capsule.querySelector('span');
+                if (textElement) {
+                    textElement.classList.add('text-white');
+                }
             } else {
-                dot.classList.add('disconnected');
+                // Disconnected state - gray background with cross icon
+                capsule.classList.add('bg-gray-200', 'border', 'border-gray-300');
+                icon.classList.add('fa-times', 'text-gray-500');
+                // Reset text color to default
+                const textElement = capsule.querySelector('span');
+                if (textElement) {
+                    textElement.classList.remove('text-white');
+                }
             }
         }
     }
 
-    updateStatusText(elementId, text) {
-        const textElement = document.getElementById(elementId);
-        if (textElement) {
-            textElement.textContent = text;
-            
-            // Add CSS classes based on status
-            textElement.className = 'text-xs oauth-status-text';
-            if (text.includes('✓')) {
-                textElement.classList.add('connected');
-            } else {
-                textElement.classList.add('disconnected');
-            }
-        }
-    }
 
     setupPeriodicChecks() {
         // Check auth status every 30 seconds

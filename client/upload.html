@@ -53,21 +53,6 @@
             <a href="settings.html" class="nav-link text-gray-500 hover:text-primary px-3 py-2 rounded-xl text-sm font-medium transition-colors"><i class="fas fa-cog mr-2"></i>Settings</a>
             <a href="about.html" class="nav-link text-gray-500 hover:text-primary px-3 py-2 rounded-xl text-sm font-medium transition-colors"><i class="fas fa-info-circle mr-2"></i>About</a>
             <a href="contact.html" class="nav-link text-gray-500 hover:text-primary px-3 py-2 rounded-xl text-sm font-medium transition-colors"><i class="fas fa-envelope mr-2"></i>Contact</a>
-            
-            <!-- OAuth Status Indicators -->
-            <div class="flex items-center space-x-3 ml-4 pl-4 border-l border-gray-200">
-              <!-- Google Drive Status -->
-              <div id="google-status-indicator" class="flex items-center space-x-2 oauth-status-indicator" title="Google Drive Status">
-                <div class="w-2 h-2 rounded-full bg-gray-300 oauth-status-dot" id="google-status-dot"></div>
-                <span class="text-xs oauth-status-text" id="google-status-text">Google Drive</span>
-              </div>
-              
-              <!-- Etsy Status -->
-              <div id="etsy-status-indicator" class="flex items-center space-x-2 oauth-status-indicator" title="Etsy Status">
-                <div class="w-2 h-2 rounded-full bg-gray-300 oauth-status-dot" id="etsy-status-dot"></div>
-                <span class="text-xs oauth-status-text" id="etsy-status-text">Etsy</span>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -87,18 +72,6 @@
         <a href="settings.html" class="nav-link block px-3 py-2 rounded-xl text-sm font-medium text-gray-500 hover:text-primary transition-colors"><i class="fas fa-cog mr-2"></i>Settings</a>
         <a href="about.html" class="nav-link block px-3 py-2 rounded-xl text-sm font-medium text-gray-500 hover:text-primary transition-colors"><i class="fas fa-info-circle mr-2"></i>About</a>
         <a href="contact.html" class="nav-link block px-3 py-2 rounded-xl text-sm font-medium text-gray-500 hover:text-primary transition-colors"><i class="fas fa-envelope mr-2"></i>Contact</a>
-        
-        <!-- Mobile OAuth Status Indicators -->
-        <div class="flex items-center justify-center space-x-4 pt-2 border-t border-gray-200 mt-2">
-          <div class="flex items-center space-x-2 oauth-status-indicator" title="Google Drive Status">
-            <div class="w-2 h-2 rounded-full bg-gray-300 oauth-status-dot" id="mobile-google-status-dot"></div>
-            <span class="text-xs oauth-status-text" id="mobile-google-status-text">Google Drive</span>
-          </div>
-          <div class="flex items-center space-x-2 oauth-status-indicator" title="Etsy Status">
-            <div class="w-2 h-2 rounded-full bg-gray-300 oauth-status-dot" id="mobile-etsy-status-dot"></div>
-            <span class="text-xs oauth-status-text" id="mobile-etsy-status-text">Etsy</span>
-          </div>
-        </div>
       </div>
     </div>
   </nav>
@@ -106,6 +79,25 @@
   <!-- Main Content -->
   <main>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <!-- OAuth Status Indicators -->
+      <div class="flex items-center justify-center space-x-4 mb-4">
+        <!-- Google Drive Status -->
+        <div id="google-status-indicator" class="oauth-status-indicator" title="Google Drive Status">
+          <div class="px-3 py-0.5 rounded-full bg-gray-200 oauth-status-capsule flex items-center space-x-2" id="google-status-capsule">
+            <i class="fas fa-times text-xs" id="google-status-icon"></i>
+            <span class="text-xs font-medium" id="google-status-text">Google Drive</span>
+          </div>
+        </div>
+        
+        <!-- Etsy Status -->
+        <div id="etsy-status-indicator" class="oauth-status-indicator" title="Etsy Status">
+          <div class="px-3 py-0.5 rounded-full bg-gray-200 oauth-status-capsule flex items-center space-x-2" id="etsy-status-capsule">
+            <i class="fas fa-times text-xs" id="etsy-status-icon"></i>
+            <span class="text-xs font-medium" id="etsy-status-text">Etsy</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Header -->
       <div class="text-center mb-5">
         <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-3">Upload Your Product Images</h1>
