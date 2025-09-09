@@ -351,7 +351,6 @@ class EtsyService {
         );
         uploaded.push(response.data);
       } catch (error) {
-        console.log('Upload listing images error', error);
         throw new Error(
           `Failed to upload image ${i + 1}: ${
             error.response?.data?.error || error.message

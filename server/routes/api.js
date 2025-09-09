@@ -138,6 +138,13 @@ async function processUploadAsync(processingId, files, options = {}, user = null
       errors: watermarkResult.errors
     });
 
+    // Step 3.1: Create video (if multiple images)
+    if (validFiles.length >= 2) {
+      updateProcessingStatus(processingId, 'video_create', 'started');
+      const videoBuffer = await imageService.createSlideshowVideo(validFiles.map(file => file.buffer), settings.miniGif);
+      updateProcessingStatus(processingId, 'video_create', 'completed');
+    }
+
     // Step 4: Create collage (if multiple images)
     let collageBuffer = null;
     if (validFiles.length >= 2 && settings.collage.enabled) {
@@ -202,13 +209,14 @@ async function processUploadAsync(processingId, files, options = {}, user = null
     try {
       const imageBuffers = validFiles.map(file => file.buffer);
       metadata = await aiService.generateMetadata(imageBuffers);
-      //console.log('AI metadata', metadata);
+      console.log('AI metadata', metadata);
       updateProcessingStatus(processingId, 'ai_metadata', 'completed', {
         titleLength: metadata.title.length,
         tagCount: metadata.tags.length,
         descriptionLength: metadata.description.length
       });
     } catch (error) {
+      console.error('Error generating AI metadata:', error);
       updateProcessingStatus(processingId, 'ai_metadata', 'failed', {
         error: error.message
       });
@@ -263,6 +271,18 @@ async function processUploadAsync(processingId, files, options = {}, user = null
             mimetype: 'image/jpeg'
           });
         }
+
+        /*
+        console.log('videoBuffer:', videoBuffer);        
+        // Add video if created
+        if (videoBuffer) {
+          imagesToUpload.push({
+            buffer: videoBuffer,
+            filename: 'video.mp4',
+            mimetype: 'video/mp4'
+          });
+        }
+        */
         
         // Upload all images to listing
         if (imagesToUpload.length > 0) {

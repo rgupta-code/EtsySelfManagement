@@ -19,10 +19,12 @@ class SettingsService {
     return {
       watermark: {
         text: 'DigiGoods',
-        position: 'bottom-right',
-        opacity: 0.7,
-        fontSize: 24,
-        color: '#FFFFFF',
+        position: 'center',
+        opacity: 0.20,
+        fontSize: 40,
+        color: "#b0b0b0",
+        spacing: 200,   // distance between watermarks
+        angle: -30,     // rotation angle (diagonal watermark)
         enabled: true
       },
       collage: {
@@ -46,6 +48,13 @@ class SettingsService {
         imageQuality: 90,
         maxImageSize: 10485760, // 10MB in bytes
         allowedFormats: ['jpeg', 'jpg', 'png', 'webp']
+      },
+      miniGif: {
+        width: 2000,
+        height: 2000,
+        outputPath: 'slideshow.gif',
+        delay: 100,
+        fadeFrames: 10
       }
     };
   }

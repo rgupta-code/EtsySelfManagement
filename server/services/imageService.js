@@ -1,5 +1,9 @@
 const sharp = require('sharp');
 const path = require('path');
+const ffmpeg = require("fluent-ffmpeg");
+const fs = require("fs");
+const tmp = require("tmp");
+const { PassThrough } = require("stream");
 
 /**
  * Image Processing Service
@@ -58,34 +62,57 @@ class ImageService {
    * @param {Object} watermarkConfig - Watermark configuration
    * @returns {Promise<Buffer>} - Watermarked image buffer
    */
+  
   async watermarkImage(imageBuffer, watermarkConfig = {}) {
     try {
       const {
-        text = 'Watermark',
-        position = 'bottom-right',
-        opacity = 0.7,
-        fontSize = 24,
-        color = 'white'
+        text = "Watermark",
+        opacity = 0.20,  // lighter for repeated marks
+        fontSize = 40,
+        color = "#b0b0b0",
+        spacing = 200,   // distance between watermarks
+        angle = -30      // rotation angle (diagonal watermark)
       } = watermarkConfig;
 
-      // Get image metadata to calculate positioning
       const image = sharp(imageBuffer);
       const metadata = await image.metadata();
       const { width, height } = metadata;
 
-      // Calculate text positioning based on position parameter
-      const positions = this._calculateWatermarkPosition(position, width, height, fontSize);
+      // Build tiled watermark pattern
+      let texts = "";
+      for (let y = 0; y < height + spacing; y += spacing) {
+        for (let x = 0; x < width + spacing; x += spacing) {
+          texts += `<text x="${x}" y="${y}" class="watermark">${text}</text>`;
+        }
+      }
 
-      // Create SVG watermark
-      const svgWatermark = this._createSvgWatermark(text, fontSize, color, opacity, positions);
+      // Create SVG with repeated text, rotated for diagonal effect
+      const svgWatermark = `
+        <svg width="${width}" height="${height}">
+          <style>
+            .watermark {
+              fill: ${color};
+              font-size: ${fontSize}px;
+              font-family: Arial, sans-serif;
+              opacity: ${opacity};
+            }
+          </style>
+          <g transform="rotate(${angle}, ${width / 2}, ${height / 2})">
+            ${texts}
+          </g>
+        </svg>
+      `;
 
-      // Apply watermark and return processed image
+      // Apply watermark
       const watermarkedBuffer = await image
-        .composite([{
-          input: Buffer.from(svgWatermark),
-          gravity: 'northwest'
-        }])
-        .jpeg({ quality: 90 }) // Maintain high quality
+        .composite([
+          {
+            input: Buffer.from(svgWatermark),
+            left: 0,
+            top: 0,
+          },
+        ])
+        .jpeg({ quality: 90 })
         .toBuffer();
 
       return watermarkedBuffer;
@@ -93,6 +120,66 @@ class ImageService {
       throw new Error(`Watermarking failed: ${error.message}`);
     }
   }
+
+  async createSlideshowVideo(imageBuffers, {
+    width = 800,
+    height = 600,
+    duration = 2,   // seconds each image is shown
+    fade = 1        // seconds of fade duration
+  }) {
+    return new Promise((resolve, reject) => {
+      try {
+        // Step 1: Save buffers to temp files
+        const tmpFiles = imageBuffers.map((buf, i) => {
+          const tmpFile = tmp.fileSync({ postfix: `.jpg` });
+          fs.writeFileSync(tmpFile.name, buf);
+          return tmpFile.name;
+        });
+  
+        // Step 2: Build filter_complex for fade transitions
+        // Each image is treated as a segment, we crossfade between them
+        const filters = [];
+        tmpFiles.forEach((file, i) => {
+          filters.push(`[${i}:v]scale=${width}:${height},setpts=PTS-STARTPTS[v${i}]`);
+        });
+  
+        let xfadeChain = `[v0]`;
+        for (let i = 1; i < tmpFiles.length; i++) {
+          const out = `vxf${i}`;
+          filters.push(
+            `${xfadeChain}[v${i}]xfade=transition=fade:duration=${fade}:offset=${(i - 1) * duration}[${out}]`
+          );
+          xfadeChain = `[${out}]`;
+        }
+  
+        // Step 3: Run ffmpeg
+        const command = ffmpeg();
+  
+        tmpFiles.forEach(file => command.input(file).inputOptions([`-t ${duration}`]));
+  
+        const stream = new PassThrough();
+        command
+          .complexFilter(filters, [xfadeChain.replace(/\[|\]/g, "")])
+          .outputOptions([
+            "-c:v libx264",
+            "-pix_fmt yuv420p",
+            "-movflags frag_keyframe+empty_moov" // for streaming
+          ])
+          .format("mp4")
+          .pipe(stream);
+  
+        // Collect into buffer
+        const chunks = [];
+        stream.on("data", chunk => chunks.push(chunk));
+        stream.on("end", () => resolve(Buffer.concat(chunks)));
+        stream.on("error", reject);
+      } catch (err) {
+        console.error('Error creating video:', err);
+        reject(err);
+      }
+    });
+  }
+
 
   /**
    * Applies watermarks to multiple images
