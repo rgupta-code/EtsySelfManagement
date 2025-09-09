@@ -120,13 +120,13 @@ class ImageService {
       throw new Error(`Watermarking failed: ${error.message}`);
     }
   }
-
-  async createSlideshowVideoOld(imageBuffers, {
+ 
+  async createSlideshowVideo(imageBuffers, {
     width = 800,
     height = 600,
     duration = 3,   // seconds each image is shown
     fade = 1        // seconds of fade duration
-  }) {
+  } = {}) {
     return new Promise((resolve, reject) => {
       try {
         // Step 1: Save buffers to temp files
@@ -136,118 +136,60 @@ class ImageService {
           return tmpFile.name;
         });
   
-        // Step 2: Build filter_complex for fade transitions
-        // Each image is treated as a segment, we crossfade between them
-        const filters = [];
-        tmpFiles.forEach((file, i) => {
-          filters.push(`[${i}:v]scale=${width}:${height},setpts=PTS-STARTPTS[v${i}]`);
-        });
-  
-        let xfadeChain = `[v0]`;
-        for (let i = 1; i < tmpFiles.length; i++) {
-          const out = `vxf${i}`;
-          filters.push(
-            `${xfadeChain}[v${i}]xfade=transition=fade:duration=${fade}:offset=${(i - 1) * duration}[${out}]`
-          );
-          xfadeChain = `[${out}]`;
-        }
-  
-        // Step 3: Run ffmpeg
-        const command = ffmpeg();
-  
-        tmpFiles.forEach(file => command.input(file).inputOptions([`-t ${duration}`]));
-  
-        const stream = new PassThrough();
-        command
-          .complexFilter(filters, [xfadeChain.replace(/\[|\]/g, "")])
-          .outputOptions([
-            "-c:v libx264",
-            "-pix_fmt yuv420p",
-            "-movflags frag_keyframe+empty_moov" // for streaming
-          ])
-          .format("mp4")
-          .pipe(stream);
-  
-        // Collect into buffer
-        const chunks = [];
-        stream.on("data", chunk => chunks.push(chunk));
-        stream.on("end", () => resolve(Buffer.concat(chunks)));
-        stream.on("error", reject);
-      } catch (err) {
-        console.error('Error creating video:', err);
-        reject(err);
-      }
-    });
-  }
-
-  async createSlideshowVideo(imageBuffers, {
-    width = 800,
-    height = 600,
-    duration = 3,   // seconds per image
-    fade = 1        // seconds fade overlap
-  } = {}) {
-    return new Promise((resolve, reject) => {
-      try {
-        // Save buffers to temp files
-        const tmpFiles = imageBuffers.map((buf, i) => {
-          const tmpFile = tmp.fileSync({ postfix: `.jpg` });
-          fs.writeFileSync(tmpFile.name, buf);
-          return tmpFile.name;
-        });
-  
-        // Build filter graph
+        // Step 2: Build filter_complex for fades
         const filters = [];
         tmpFiles.forEach((file, i) => {
           filters.push(
-            `[${i}:v]scale=${width}:${height},fps=30,format=yuv420p,setsar=1[v${i}]`
+            `[${i}:v]scale=${width}:${height},fps=30,format=yuv420p,setpts=PTS-STARTPTS[v${i}]`
           );
         });
   
         let chain = `[v0]`;
         for (let i = 1; i < tmpFiles.length; i++) {
           const out = `vxf${i}`;
-          const offset = i * (duration - fade); // when the crossfade starts
+          const offset = i * (duration - fade);
           filters.push(
             `${chain}[v${i}]xfade=transition=fade:duration=${fade}:offset=${offset}[${out}]`
           );
           chain = `[${out}]`;
         }
   
-        // Build ffmpeg command
+        // Step 3: Run ffmpeg
+        const outputFile = tmp.fileSync({ postfix: ".mp4" }).name;
+  
         const command = ffmpeg();
   
         tmpFiles.forEach(file => {
-          // ✅ Here we attach loop + duration *before* input
-          command.input(file)
-            .inputOptions([
-              "-loop 1",                // loop still image
-              "-framerate 30",          // output framerate
-              `-t ${duration}`          // show this long
-            ]);
+          command.input(file).inputOptions([
+            "-loop 1",
+            `-t ${duration}`,
+            "-framerate 30"
+          ]);
         });
   
-        const stream = new PassThrough();
         command
           .complexFilter(filters, [chain.replace(/\[|\]/g, "")])
           .outputOptions([
             "-c:v libx264",
             "-pix_fmt yuv420p",
-            "-movflags +faststart"    // final MP4 with correct duration
+            "-movflags +faststart"
           ])
-          .format("mp4")
-          .on("error", reject)
-          .on("end", () => {}) // handled by stream 'end'
-          .pipe(stream);
-  
-        const chunks = [];
-        stream.on("data", chunk => chunks.push(chunk));
-        stream.on("end", () => resolve(Buffer.concat(chunks)));
-        stream.on("error", reject);
+          .save(outputFile) // ✅ ensure video is finalized
+          .on("start", cmd => console.log("FFmpeg command:", cmd))
+          .on("stderr", line => console.log("FFmpeg:", line))
+          .on("end", () => {
+            console.log("Slideshow created:", outputFile);
+            // return buffer so you can upload to Etsy
+            resolve(fs.readFileSync(outputFile));
+          })
+          .on("error", reject);
       } catch (err) {
         reject(err);
       }
     });
   }
+  
+  
   
 
 

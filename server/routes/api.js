@@ -8,6 +8,7 @@ const GoogleDriveService = require('../services/googleDriveService');
 const AIService = require('../services/aiService');
 const EtsyService = require('../services/etsyService');
 const SettingsService = require('../services/settingsService');
+const fs = require('fs');
 
 const router = express.Router();
 
@@ -284,6 +285,9 @@ async function processUploadAsync(processingId, files, options = {}, user = null
 
         // Upload video to listing
         if (videoBuffer) {
+          //fs.writeFileSync("slideshow_test.mp4", videoBuffer);
+          //console.log("Slideshow saved at slideshow_test.mp4");
+
            // Create a video object to pass to the method
           const videos = [{
             buffer: videoBuffer,
