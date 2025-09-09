@@ -246,12 +246,30 @@ async function processUploadAsync(processingId, files, options = {}, user = null
         };
       
         etsyListing = await etsyService.createDraftListing(listingData);
+        
         // Upload images to listing
+        const imagesToUpload = [];
+        
+        // Add watermarked images
         if (watermarkResult.watermarkedImages.length > 0) {
-          
+          imagesToUpload.push(...watermarkResult.watermarkedImages);
+        }
+        
+        // Add collage if created
+        if (collageBuffer) {
+          imagesToUpload.push({
+            buffer: collageBuffer,
+            filename: 'collage.jpg',
+            mimetype: 'image/jpeg'
+          });
+        }
+        
+        // Upload all images to listing
+        if (imagesToUpload.length > 0) {
+          console.log('Uploading images to listing');
           const uploadedImages = await etsyService.uploadListingImages(
             etsyListing.listing_id,
-            watermarkResult.watermarkedImages
+            imagesToUpload
           );
           etsyListing.uploadedImages = uploadedImages;
         }

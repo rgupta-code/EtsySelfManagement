@@ -329,7 +329,6 @@ class EtsyService {
       const file = images[i];
   
       // Use stream if available, or buffer fallback
-      const stream = file.path ? fs.createReadStream(file.path) : file.buffer;
       formData.append("image", file.buffer, {
         filename: file.filename || `image_${i + 1}.jpg`,
         contentType: file.mimeType || 'image/jpeg',
