@@ -428,6 +428,47 @@ router.patch('/settings/:section', optionalAuth, asyncHandler(async (req, res) =
 
 
 /**
+ * Generate images using AI
+ */
+router.post('/generate-images', optionalAuth, asyncHandler(async (req, res) => {
+  console.log('generate-images');
+  console.log('req.body:', req.body);
+  console.log('req.user:', req.user);
+  const { prompt, count = 1, style = 'product' } = req.body;
+  
+  if (!prompt || prompt.trim().length === 0) {
+    throw new APIError('Prompt is required', 400, 'MISSING_PROMPT');
+  }
+
+  if (count < 1 || count > 4) {
+    throw new APIError('Count must be between 1 and 4', 400, 'INVALID_COUNT');
+  }
+
+  try {
+    // Generate images using AI service
+    const images = await aiService.generateImages({
+      prompt: prompt.trim(),
+      count: parseInt(count),
+      style: style
+    });
+
+    res.json({
+      success: true,
+      images: images,
+      message: `Generated ${images.length} image(s) successfully`
+    });
+
+  } catch (error) {
+    console.error('Image generation error:', error);
+    throw new APIError(
+      `Image generation failed: ${error.message}`,
+      500,
+      'IMAGE_GENERATION_ERROR'
+    );
+  }
+}));
+
+/**
  * Health check endpoint
  */
 router.get('/health', (req, res) => {

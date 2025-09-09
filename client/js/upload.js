@@ -474,7 +474,7 @@ class UploadManager {
             collagePreview.classList.remove('hidden');
             
             // Show collage preview (simulated for now)
-            const collageContainer = collagePreview.querySelector('.w-48.h-32');
+            const collageContainer = collagePreview.querySelector('.w-40.h-28');
             if (collageContainer && this.selectedFiles.length > 0) {
                 collageContainer.innerHTML = '';
                 

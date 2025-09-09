@@ -1,10 +1,14 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenAI } = require('@google/genai');
+const axios = require('axios');
 
 class AIService {
   constructor() {
     this.genAI = null;
     this.model = null;
+    this.imageModel = null;
     this.initialized = false;
+    this.apiKey = process.env.GOOGLE_AI_API_KEY;
   }
 
   /**
@@ -20,6 +24,13 @@ class AIService {
 
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    this.imageModel = this.genAI.getGenerativeModel({
+      model: "gemini-2.5-flash-image-preview",
+      generationConfig: {
+        responseMimeType: "image/png",
+      },
+    });
+    console.log('imageModel:', this.imageModel);
     this.initialized = true;
   }
 
@@ -311,6 +322,305 @@ class AIService {
     }
     
     return selected;
+  }
+
+  /**
+   * Generate images using Gemini AI
+   */
+
+  async generateImagesUsingGemini(options) {
+    console.log('Image apiKey:', this.apiKey);  
+    const { prompt, count = 1, style = 'product' } = options;
+
+    try {
+      const genAI = new GoogleGenerativeAI(this.apiKey);
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.5-flash-image-preview"
+      });
+
+      // Enhanced prompt based on style
+      const stylePrompts = {
+        product: 'professional product photography, clean white background, studio lighting, high quality',
+        lifestyle: 'lifestyle photography, natural lighting, real environment, warm and inviting',
+        artistic: 'artistic photography, creative composition, unique angles, dramatic lighting',
+        minimalist: 'minimalist photography, clean composition, simple background, elegant focus'
+      };
+  
+      const enhancedPrompt = `${prompt}, ${stylePrompts[style] || stylePrompts['product']}`;
+  
+      const images = [];
+      // Make a separate call for each image
+      for (let i = 0; i < count; i++) {
+        const result = await model.generateContent(enhancedPrompt);
+        const response = result.response;
+        
+        if (response && response.candidates && response.candidates.length > 0) {
+          const imagePart = response.candidates[0].content.parts[0];
+          if (imagePart && imagePart.inlineData) {
+            const dataUrl = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
+            images.push({
+              id: `generated_${Date.now()}_${i}`,
+              dataUrl,
+              url: dataUrl,
+              prompt,
+              style,
+              generatedAt: new Date().toISOString()
+            });
+          }
+        }
+      }
+      return images;
+
+    } catch (error) {
+      console.error("Error generating images with Gemini:", error.message);
+      // Fallback logic for placeholder images
+      const images = [];
+      for (let i = 0; i < count; i++) {
+        const placeholderImage = "https://via.placeholder.com/1024";
+        images.push({
+          id: `placeholder_${Date.now()}_${i}`,
+          dataUrl: placeholderImage,
+          url: placeholderImage,
+          prompt,
+          style,
+          generatedAt: new Date().toISOString()
+        });
+      }
+      return images;
+    }
+  }
+
+  async generateImagesUsingPexels(options) {
+    this.pexelApiKey = process.env.PEXELS_API_KEY;
+    console.log('Pexels API Key:', this.pexelApiKey);
+    const { prompt, count = 1, style = 'product' } = options;
+  
+    try {
+      if (!this.pexelApiKey) {
+        throw new Error("Pexels API key not configured");
+      }
+  
+      // Enhanced prompt based on style
+      const stylePrompts = {
+        product: 'product',
+        lifestyle: 'lifestyle',
+        artistic: 'artistic',
+        minimalist: 'minimalist'
+      };
+  
+      const searchQuery = `${prompt} ${stylePrompts[style] || stylePrompts['product']}`;
+  
+      // Fetch images from Pexels
+      const response = await axios.get('https://api.pexels.com/v1/search', {
+        headers: {
+          Authorization: this.pexelApiKey
+        },
+        params: {
+          query: searchQuery,
+          per_page: count
+        }
+      });
+  
+      const photos = response.data.photos || [];
+      const images = photos.map((photo, i) => {
+        const url = photo.src.original || photo.src.large2x || photo.src.medium;
+        return {
+          id: `pexels_${photo.id}_${i}`,
+          dataUrl: url,
+          url,
+          prompt,
+          style,
+          generatedAt: new Date().toISOString()
+        };
+      });
+  
+      // Fallback to placeholder if no images found
+      if (images.length === 0) {
+        for (let i = 0; i < count; i++) {
+          const placeholderImage = "https://via.placeholder.com/1024";
+          images.push({
+            id: `placeholder_${Date.now()}_${i}`,
+            dataUrl: placeholderImage,
+            url: placeholderImage,
+            prompt,
+            style,
+            generatedAt: new Date().toISOString()
+          });
+        }
+      }
+      console.log('images:', images);
+      return images;
+  
+    } catch (error) {
+      console.error("Error fetching images from Pexels:", error.message);
+  
+      // Fallback to placeholder images if API fails
+      const images = [];
+      for (let i = 0; i < count; i++) {
+        const placeholderImage = "https://via.placeholder.com/1024";
+        images.push({
+          id: `placeholder_${Date.now()}_${i}`,
+          dataUrl: placeholderImage,
+          url: placeholderImage,
+          prompt,
+          style,
+          generatedAt: new Date().toISOString()
+        });
+      }
+      return images;
+    }
+  }
+
+  async generateImages(options) {
+    console.log('Using Google Imagen for image generation');
+    const { prompt, count = 1, style = 'product' } = options;
+  
+    try {
+      if (!this.apiKey) {
+        throw new Error("Google API key not configured");
+      }
+  
+      // Init Google Imagen client
+      const ai = new GoogleGenAI({
+        apiKey: this.apiKey
+      });
+  
+      // Enhanced prompt based on style
+      const stylePrompts = {
+        product: 'professional product photography, clean white background, studio lighting, high quality',
+        lifestyle: 'lifestyle photography, natural lighting, real environment, warm and inviting',
+        artistic: 'artistic photography, creative composition, unique angles, dramatic lighting',
+        minimalist: 'minimalist photography, clean composition, simple background, elegant focus'
+      };
+  
+      const enhancedPrompt = `${prompt}, ${stylePrompts[style] || stylePrompts['product']}`;
+  
+      // Generate images with Imagen
+      const response = await ai.models.generateImages({
+        model: "imagen-4.0-generate-001",
+        prompt: enhancedPrompt,
+        config: {
+          numberOfImages: count,
+          size: "1024x1024"
+        }
+      });
+  
+      const images = [];
+      let idx = 1;
+  
+      for (const generatedImage of response.generatedImages) {
+        if (generatedImage.image?.imageBytes) {
+          const base64Data = generatedImage.image.imageBytes;
+          const dataUrl = `data:image/png;base64,${base64Data}`;
+          images.push({
+            id: `imagen_${Date.now()}_${idx}`,
+            dataUrl,
+            url: dataUrl,
+            prompt,
+            style,
+            generatedAt: new Date().toISOString()
+          });
+        }
+        idx++;
+      }
+  
+      // Fallback if no images returned
+      if (images.length === 0) {
+        for (let i = 0; i < count; i++) {
+          const placeholderImage = "https://via.placeholder.com/1024";
+          images.push({
+            id: `placeholder_${Date.now()}_${i}`,
+            dataUrl: placeholderImage,
+            url: placeholderImage,
+            prompt,
+            style,
+            generatedAt: new Date().toISOString()
+          });
+        }
+      }
+  
+      return images;
+  
+    } catch (error) {
+      console.error("Error generating images with Google Imagen:", error.message);
+  
+      // Fallback to placeholder images
+      const images = [];
+      for (let i = 0; i < count; i++) {
+        const placeholderImage = "https://via.placeholder.com/1024";
+        images.push({
+          id: `placeholder_${Date.now()}_${i}`,
+          dataUrl: placeholderImage,
+          url: placeholderImage,
+          prompt,
+          style,
+          generatedAt: new Date().toISOString()
+        });
+      }
+      return images;
+    }
+  }
+
+  /**
+   * Create a placeholder image for demonstration
+   * In production, this would be replaced with actual AI-generated images
+   */
+  createPlaceholderImage(prompt, index) {
+    // Create a simple placeholder image using canvas
+    const canvas = require('canvas');
+    const { createCanvas } = canvas;
+    
+    const canvasWidth = 1024;
+    const canvasHeight = 1024;
+    const canvasElement = createCanvas(canvasWidth, canvasHeight);
+    const ctx = canvasElement.getContext('2d');
+    
+    // Create gradient background
+    const gradient = ctx.createLinearGradient(0, 0, canvasWidth, canvasHeight);
+    gradient.addColorStop(0, '#f8fafc');
+    gradient.addColorStop(1, '#e2e8f0');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    
+    // Add text
+    ctx.fillStyle = '#374151';
+    ctx.font = 'bold 48px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('AI Generated', canvasWidth / 2, canvasHeight / 2 - 50);
+    
+    ctx.font = '24px Arial';
+    ctx.fillText(`Image ${index}`, canvasWidth / 2, canvasHeight / 2 + 20);
+    
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#6b7280';
+    const words = prompt.split(' ');
+    const lines = [];
+    let currentLine = '';
+    
+    for (const word of words) {
+      const testLine = currentLine + (currentLine ? ' ' : '') + word;
+      const metrics = ctx.measureText(testLine);
+      if (metrics.width > canvasWidth - 100) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    lines.push(currentLine);
+    
+    let y = canvasHeight / 2 + 80;
+    for (const line of lines.slice(0, 3)) { // Show max 3 lines
+      ctx.fillText(line, canvasWidth / 2, y);
+      y += 30;
+    }
+    
+    // Add border
+    ctx.strokeStyle = '#d1d5db';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(2, 2, canvasWidth - 4, canvasHeight - 4);
+    
+    return canvasElement.toDataURL('image/png');
   }
 }
 

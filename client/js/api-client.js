@@ -305,6 +305,31 @@ class APIClient {
     }
 
     /**
+     * Generate images using AI
+     */
+    async generateImages(options) {
+        try {
+            const response = await this.makeRequest(`${this.apiURL}/generate-images`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(options)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to generate images');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error generating images:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Initiate Google OAuth
      */
     async initiateGoogleAuth() {
