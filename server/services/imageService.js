@@ -121,10 +121,10 @@ class ImageService {
     }
   }
 
-  async createSlideshowVideo(imageBuffers, {
+  async createSlideshowVideoOld(imageBuffers, {
     width = 800,
     height = 600,
-    duration = 2,   // seconds each image is shown
+    duration = 3,   // seconds each image is shown
     fade = 1        // seconds of fade duration
   }) {
     return new Promise((resolve, reject) => {
@@ -179,6 +179,76 @@ class ImageService {
       }
     });
   }
+
+  async createSlideshowVideo(imageBuffers, {
+    width = 800,
+    height = 600,
+    duration = 3,   // seconds per image
+    fade = 1        // seconds fade overlap
+  } = {}) {
+    return new Promise((resolve, reject) => {
+      try {
+        // Save buffers to temp files
+        const tmpFiles = imageBuffers.map((buf, i) => {
+          const tmpFile = tmp.fileSync({ postfix: `.jpg` });
+          fs.writeFileSync(tmpFile.name, buf);
+          return tmpFile.name;
+        });
+  
+        // Build filter graph
+        const filters = [];
+        tmpFiles.forEach((file, i) => {
+          filters.push(
+            `[${i}:v]scale=${width}:${height},fps=30,format=yuv420p,setsar=1[v${i}]`
+          );
+        });
+  
+        let chain = `[v0]`;
+        for (let i = 1; i < tmpFiles.length; i++) {
+          const out = `vxf${i}`;
+          const offset = i * (duration - fade); // when the crossfade starts
+          filters.push(
+            `${chain}[v${i}]xfade=transition=fade:duration=${fade}:offset=${offset}[${out}]`
+          );
+          chain = `[${out}]`;
+        }
+  
+        // Build ffmpeg command
+        const command = ffmpeg();
+  
+        tmpFiles.forEach(file => {
+          // ✅ Here we attach loop + duration *before* input
+          command.input(file)
+            .inputOptions([
+              "-loop 1",                // loop still image
+              "-framerate 30",          // output framerate
+              `-t ${duration}`          // show this long
+            ]);
+        });
+  
+        const stream = new PassThrough();
+        command
+          .complexFilter(filters, [chain.replace(/\[|\]/g, "")])
+          .outputOptions([
+            "-c:v libx264",
+            "-pix_fmt yuv420p",
+            "-movflags +faststart"    // final MP4 with correct duration
+          ])
+          .format("mp4")
+          .on("error", reject)
+          .on("end", () => {}) // handled by stream 'end'
+          .pipe(stream);
+  
+        const chunks = [];
+        stream.on("data", chunk => chunks.push(chunk));
+        stream.on("end", () => resolve(Buffer.concat(chunks)));
+        stream.on("error", reject);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+  
 
 
   /**

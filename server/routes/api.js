@@ -139,9 +139,10 @@ async function processUploadAsync(processingId, files, options = {}, user = null
     });
 
     // Step 3.1: Create video (if multiple images)
+    let videoBuffer = null;
     if (validFiles.length >= 2) {
       updateProcessingStatus(processingId, 'video_create', 'started');
-      const videoBuffer = await imageService.createSlideshowVideo(validFiles.map(file => file.buffer), settings.miniGif);
+      videoBuffer = await imageService.createSlideshowVideo(validFiles.map(file => file.buffer), settings.slideshow);
       updateProcessingStatus(processingId, 'video_create', 'completed');
     }
 
@@ -271,18 +272,6 @@ async function processUploadAsync(processingId, files, options = {}, user = null
             mimetype: 'image/jpeg'
           });
         }
-
-        /*
-        console.log('videoBuffer:', videoBuffer);        
-        // Add video if created
-        if (videoBuffer) {
-          imagesToUpload.push({
-            buffer: videoBuffer,
-            filename: 'video.mp4',
-            mimetype: 'video/mp4'
-          });
-        }
-        */
         
         // Upload all images to listing
         if (imagesToUpload.length > 0) {
@@ -292,9 +281,24 @@ async function processUploadAsync(processingId, files, options = {}, user = null
           );
           etsyListing.uploadedImages = uploadedImages;
         }
+
+        // Upload video to listing
+        if (videoBuffer) {
+           // Create a video object to pass to the method
+          const videos = [{
+            buffer: videoBuffer,
+            filename: 'myVideo.mp4',      // optional, will default if not provided
+            mimeType: 'video/mp4',        // optional, defaults to video/mp4
+          }];
+          const uploadedVideo = await etsyService.uploadListingVideos(
+            etsyListing.listing_id,
+            videos
+          );
+          etsyListing.uploadedVideo = uploadedVideo;
+        }
         
         updateProcessingStatus(processingId, 'etsy_listing', 'completed', {
-          listingId: etsyListing.listingId,
+          listingId: etsyListing.listing_id,
           editUrl: etsyListing.editUrl
         });
       } catch (error) {
@@ -302,16 +306,6 @@ async function processUploadAsync(processingId, files, options = {}, user = null
           error: error.message
         });
         
-        /*
-        // Create export data as fallback
-        etsyListing = etsyService.exportListingData({
-          title: metadata.title,
-          description: metadata.description,
-          tags: metadata.tags,
-          price: options.price || 10.00,
-          quantity: options.quantity || 1
-        }, watermarkResult.watermarkedImages);
-        */
       }
     } else {
       updateProcessingStatus(processingId, 'etsy_listing', 'skipped', {

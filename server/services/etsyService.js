@@ -361,6 +361,53 @@ class EtsyService {
     return uploaded;
   }
 
+  async uploadListingVideos(listingId, videos) {
+    if (!this.accessToken || !this.shopId) {
+      throw new Error("Not authenticated with Etsy or shop not found");
+    }
+    if (!videos?.length) throw new Error("No videos provided for upload");
+  
+    const uploaded = [];
+  
+    for (let i = 0; i < videos.length; i++) {
+      const formData = new FormData();
+      const file = videos[i];
+  
+      // Append video buffer
+      formData.append("video", file.buffer, {
+        filename: file.filename || `video_${i + 1}.mp4`,
+        contentType: file.mimeType || 'video/mp4',
+      });
+  
+      // Add optional name/metadata field
+      formData.append('name', file.filename || `video_${i + 1}.mp4`);
+  
+      try {
+        const response = await axios.post(
+          `${this.baseURL}/application/shops/${this.shopId}/listings/${listingId}/videos`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${this.accessToken}`,
+              'x-api-key': this.clientId,
+              ...formData.getHeaders(),
+            },
+          }
+        );
+        uploaded.push(response.data);
+      } catch (error) {
+        throw new Error(
+          `Failed to upload video ${i + 1}: ${
+            error.response?.data?.error || error.message
+          }`
+        );
+      }
+    }
+  
+    return uploaded;
+  }
+  
+
   async getListing(listingId) {
     if (!this.accessToken) throw new Error("Not authenticated with Etsy");
     try {

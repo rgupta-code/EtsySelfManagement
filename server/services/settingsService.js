@@ -55,6 +55,13 @@ class SettingsService {
         outputPath: 'slideshow.gif',
         delay: 100,
         fadeFrames: 10
+      },
+      slideshow: {
+        width: 800,
+        height: 600,
+        outputPath: 'video.mp4',
+        duration: 3,
+        fade: 1
       }
     };
   }
