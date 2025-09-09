@@ -406,6 +406,54 @@ class EtsyService {
   
     return uploaded;
   }
+
+  async uploadListingDigitalFiles(listingId, files) {
+    if (!this.accessToken || !this.shopId) {
+      throw new Error("Not authenticated with Etsy or shop not found");
+    }
+    if (!files?.length) throw new Error("No digital files provided for upload");
+  
+    const uploaded = [];
+  
+    for (let i = 0; i < files.length; i++) {
+      const formData = new FormData();
+      const file = files[i];
+  
+      // Append file buffer
+      formData.append("file", file.buffer, {
+        filename: file.filename || `digital_file_${i + 1}.zip`,
+        contentType: file.mimeType || 'application/zip',
+      });
+  
+      // Add optional name field
+      formData.append('name', file.filename || `digital_file_${i + 1}.zip`);
+  
+      try {
+        const response = await axios.post(
+          `${this.baseURL}/application/shops/${this.shopId}/listings/${listingId}/files`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${this.accessToken}`,
+              'x-api-key': this.clientId,
+              ...formData.getHeaders(),
+            },
+          }
+        );
+        uploaded.push(response.data);
+        console.log(`Digital file ${i + 1} uploaded successfully:`, response.data);
+      } catch (error) {
+        console.error(`Failed to upload digital file ${i + 1}:`, error.response?.data || error.message);
+        throw new Error(
+          `Failed to upload digital file ${i + 1}: ${
+            error.response?.data?.error || error.message
+          }`
+        );
+      }
+    }
+  
+    return uploaded;
+  }
   
 
   async getListing(listingId) {

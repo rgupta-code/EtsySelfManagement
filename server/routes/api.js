@@ -211,7 +211,6 @@ async function processUploadAsync(processingId, files, options = {}, user = null
     try {
       const imageBuffers = validFiles.map(file => file.buffer);
       metadata = await aiService.generateMetadata(imageBuffers);
-      console.log('AI metadata', metadata);
       updateProcessingStatus(processingId, 'ai_metadata', 'completed', {
         titleLength: metadata.title.length,
         tagCount: metadata.tags.length,
@@ -299,6 +298,21 @@ async function processUploadAsync(processingId, files, options = {}, user = null
             videos
           );
           etsyListing.uploadedVideo = uploadedVideo;
+        }
+
+        // Upload zip file as digital download
+        if (zipBuffer) {
+          const digitalFiles = [{
+            buffer: zipBuffer,
+            filename: `Listing_Images_${processingId}.zip`,
+            mimeType: 'application/zip'
+          }];
+          const uploadedDigitalFiles = await etsyService.uploadListingDigitalFiles(
+            etsyListing.listing_id,
+            digitalFiles
+          );
+          etsyListing.uploadedDigitalFiles = uploadedDigitalFiles;
+          console.log('Digital files uploaded successfully');
         }
         
         updateProcessingStatus(processingId, 'etsy_listing', 'completed', {
