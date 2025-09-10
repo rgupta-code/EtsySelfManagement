@@ -726,14 +726,28 @@ router.patch('/profile', requireAuth, asyncHandler(async (req, res) => {
   });
 }));
 
-// Clean up expired OAuth states every 5 minutes
-setInterval(() => {
-  const now = new Date();
-  for (const [state, data] of oauthStates.entries()) {
-    if (now > data.expiresAt) {
-      oauthStates.delete(state);
+// Clean up expired OAuth states every 5 minutes (only in production)
+let oauthCleanupInterval;
+if (process.env.NODE_ENV === 'production') {
+  oauthCleanupInterval = setInterval(() => {
+    const now = new Date();
+    for (const [state, data] of oauthStates.entries()) {
+      if (now > data.expiresAt) {
+        oauthStates.delete(state);
+      }
     }
+  }, 5 * 60 * 1000);
+}
+
+// Export cleanup function for testing
+const stopOAuthCleanup = () => {
+  if (oauthCleanupInterval) {
+    clearInterval(oauthCleanupInterval);
+    oauthCleanupInterval = null;
   }
-}, 5 * 60 * 1000);
+};
+
+// Export for testing
+router.stopOAuthCleanup = stopOAuthCleanup;
 
 module.exports = router;

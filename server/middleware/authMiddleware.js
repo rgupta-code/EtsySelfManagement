@@ -248,8 +248,19 @@ function cleanupExpiredSessions() {
   }
 }
 
-// Run cleanup every hour
-setInterval(cleanupExpiredSessions, 60 * 60 * 1000);
+// Run cleanup every hour (only in production)
+let cleanupInterval;
+if (process.env.NODE_ENV === 'production') {
+  cleanupInterval = setInterval(cleanupExpiredSessions, 60 * 60 * 1000);
+}
+
+// Export cleanup function for testing
+const stopCleanup = () => {
+  if (cleanupInterval) {
+    clearInterval(cleanupInterval);
+    cleanupInterval = null;
+  }
+};
 
 module.exports = {
   generateToken,
@@ -264,5 +275,6 @@ module.exports = {
   requireGoogleAuth,
   requireEtsyAuth,
   requireServiceAuth,
-  cleanupExpiredSessions
+  cleanupExpiredSessions,
+  stopCleanup
 };
