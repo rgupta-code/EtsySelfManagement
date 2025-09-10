@@ -1,4 +1,4 @@
-// AI Image Generation functionality for EtsyFlow
+// AI Image Generation functionality for ListGenie
 class GenerateManager {
     constructor() {
         this.generatedImages = [];

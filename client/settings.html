@@ -3,15 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings - EtsyFlow</title>
+    <title>Settings - ListGenie</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        primary: '#f97316',
-                        'primary-dark': '#ea580c',
+                        primary: '#6366f1',
+                        'primary-dark': '#4f46e5',
+                        'secondary': '#3b82f6',
+                        'accent': '#8b5cf6',
+                        'lavender': '#e0e7ff',
                         'gray-50': '#f9fafb',
                         'gray-100': '#f3f4f6',
                         'gray-200': '#e5e7eb',
@@ -30,16 +33,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/styles.css">
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="min-h-screen">
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm border-b border-gray-200">
+    <nav class="bg-white/95 backdrop-blur-xl shadow-sm border-b border-white/20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
                         <h1 class="text-2xl font-bold text-gray-900">
                             <i class="fas fa-store text-primary mr-2"></i>
-                            EtsyFlow
+                            ListGenie
                         </h1>
                     </div>
                 </div>
@@ -78,7 +81,7 @@
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div class="text-center mb-12">
                 <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                    Settings & Configuration
+                    <span class="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">Settings & Configuration</span>
                 </h1>
                 <p class="text-xl text-gray-600">
                     Customize your watermarks, collage layouts, and authentication settings
@@ -86,7 +89,7 @@
             </div>
 
             <!-- Authentication Status -->
-            <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+            <div class="modern-card p-8 mb-8">
                 <h2 class="text-2xl font-bold text-gray-900 mb-6">
                     <i class="fas fa-shield-alt text-primary mr-2"></i>
                     Authentication Status
@@ -306,7 +309,7 @@
                             Backup Folder Name
                         </label>
                         <input type="text" id="drive-folder" name="driveFolder" 
-                               placeholder="EtsyFlow Backups" maxlength="100"
+                               placeholder="ListGenie Backups" maxlength="100"
                                class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent transition-colors">
                         <p class="text-xs text-gray-500 mt-1">Folder where original images will be backed up</p>
                     </div>

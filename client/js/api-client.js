@@ -1,4 +1,4 @@
-// API Client for EtsyFlow
+// API Client for ListGenie
 class APIClient {
     constructor() {
         this.baseURL = window.location.origin;
@@ -13,14 +13,14 @@ class APIClient {
      * Get stored authentication token
      */
     getStoredToken() {
-        return localStorage.getItem('etsyflow-auth-token');
+        return localStorage.getItem('ListGenie-auth-token');
     }
 
     /**
      * Get stored refresh token
      */
     getStoredRefreshToken() {
-        return localStorage.getItem('etsyflow-refresh-token');
+        return localStorage.getItem('ListGenie-refresh-token');
     }
 
     /**
@@ -28,11 +28,11 @@ class APIClient {
      */
     storeTokens(accessToken, refreshToken = null) {
         this.authToken = accessToken;
-        localStorage.setItem('etsyflow-auth-token', accessToken);
+        localStorage.setItem('ListGenie-auth-token', accessToken);
         
         if (refreshToken) {
             this.refreshToken = refreshToken;
-            localStorage.setItem('etsyflow-refresh-token', refreshToken);
+            localStorage.setItem('ListGenie-refresh-token', refreshToken);
         }
     }
 
@@ -42,8 +42,8 @@ class APIClient {
     clearTokens() {
         this.authToken = null;
         this.refreshToken = null;
-        localStorage.removeItem('etsyflow-auth-token');
-        localStorage.removeItem('etsyflow-refresh-token');
+        localStorage.removeItem('ListGenie-auth-token');
+        localStorage.removeItem('ListGenie-refresh-token');
     }
 
     /**

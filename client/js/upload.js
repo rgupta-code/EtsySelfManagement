@@ -1,4 +1,4 @@
-// Upload functionality for EtsyFlow
+// Upload functionality for ListGenie
 class UploadManager {
     constructor() {
         this.selectedFiles = [];

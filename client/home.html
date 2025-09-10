@@ -3,27 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EtsyFlow - Streamline Your Etsy Listings</title>
+    <title>ListGenie - Streamline Your Etsy Listings</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
-          extend: {
-            colors: {
-              primary: '#f97316',
-              'primary-dark': '#ea580c',
-              'gray-50': '#f9fafb',
-              'gray-100': '#f3f4f6',
-              'gray-200': '#e5e7eb',
-              'gray-300': '#d1d5db',
-              'gray-400': '#9ca3af',
-              'gray-500': '#6b7280',
-              'gray-600': '#4b5563',
-              'gray-700': '#374151',
-              'gray-800': '#1f2937',
-              'gray-900': '#111827',
-            },
+        extend: {
+          colors: {
+            primary: '#6366f1',
+            'primary-dark': '#4f46e5',
+            'secondary': '#3b82f6',
+            'accent': '#8b5cf6',
+            'lavender': '#e0e7ff',
+            'gray-50': '#f9fafb',
+            'gray-100': '#f3f4f6',
+            'gray-200': '#e5e7eb',
+            'gray-300': '#d1d5db',
+            'gray-400': '#9ca3af',
+            'gray-500': '#6b7280',
+            'gray-600': '#4b5563',
+            'gray-700': '#374151',
+            'gray-800': '#1f2937',
+            'gray-900': '#111827',
           },
+        },
         },
       };
     </script>
@@ -33,16 +36,16 @@
     />
     <link rel="stylesheet" href="css/styles.css" />
   </head>
-  <body class="bg-gray-50 min-h-screen">
+  <body class="min-h-screen">
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm border-b border-gray-200">
+    <nav class="bg-white/95 backdrop-blur-xl shadow-sm border-b border-white/20">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <div class="flex items-center">
             <div class="flex-shrink-0">
               <h1 class="text-2xl font-bold text-gray-900">
                 <i class="fas fa-store text-primary mr-2"></i>
-                EtsyFlow
+                ListGenie
               </h1>
             </div>
           </div>
@@ -132,11 +135,19 @@
     <!-- Main Content -->
     <main>
       <!-- Hero Section -->
-      <div class="bg-gradient-to-br from-primary/10 to-orange-100 py-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="relative py-20 overflow-hidden">
+        <!-- Background Gradient -->
+        <div class="absolute inset-0 bg-gradient-to-br from-primary/10 via-blue-50/50 to-indigo-50/30"></div>
+        <!-- Animated Background Elements -->
+        <div class="absolute inset-0 overflow-hidden">
+          <div class="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary/20 to-blue-300/20 rounded-full blur-3xl animate-pulse"></div>
+          <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-indigo-200/20 to-purple-300/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+        </div>
+        
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="text-center">
             <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              Streamline Your <span class="text-primary">Etsy Listings</span>
+              Streamline Your <span class="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">Etsy Listings</span>
             </h1>
             <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
               Upload your product images and let AI create compelling listings
@@ -146,15 +157,16 @@
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="upload.html"
-                class="bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-2xl text-lg font-semibold transition-colors shadow-lg"
+                class="btn-primary px-8 py-4 text-lg font-semibold inline-flex items-center justify-center"
               >
                 <i class="fas fa-upload mr-2"></i>
                 Start Upload
               </a>
               <a
                 href="about.html"
-                class="bg-white hover:bg-gray-50 text-gray-900 px-8 py-4 rounded-2xl text-lg font-semibold transition-colors border border-gray-300"
+                class="btn-secondary px-8 py-4 text-lg font-semibold inline-flex items-center justify-center"
               >
+                <i class="fas fa-info-circle mr-2"></i>
                 Learn More
               </a>
             </div>
@@ -163,11 +175,11 @@
       </div>
 
       <!-- Features Section -->
-      <div class="py-20 bg-white">
+      <div class="py-20 relative">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="text-center mb-16">
             <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Everything You Need for Perfect Listings
+              Everything You Need for <span class="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">Perfect Listings</span>
             </h2>
             <p class="text-xl text-gray-600 max-w-2xl mx-auto">
               Our AI-powered platform handles the entire listing creation
@@ -175,9 +187,9 @@
             </p>
           </div>
           <div class="grid md:grid-cols-3 gap-8">
-            <div class="text-center p-8 bg-gray-50 rounded-2xl">
+            <div class="modern-card text-center p-8 group">
               <div
-                class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6"
+                class="w-16 h-16 bg-gradient-to-br from-primary/10 to-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300"
               >
                 <i class="fas fa-images text-2xl text-primary"></i>
               </div>
@@ -189,9 +201,9 @@
                 requirements.
               </p>
             </div>
-            <div class="text-center p-8 bg-gray-50 rounded-2xl">
+            <div class="modern-card text-center p-8 group">
               <div
-                class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6"
+                class="w-16 h-16 bg-gradient-to-br from-primary/10 to-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300"
               >
                 <i class="fas fa-robot text-2xl text-primary"></i>
               </div>
@@ -203,9 +215,9 @@
                 analysis.
               </p>
             </div>
-            <div class="text-center p-8 bg-gray-50 rounded-2xl">
+            <div class="modern-card text-center p-8 group">
               <div
-                class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6"
+                class="w-16 h-16 bg-gradient-to-br from-primary/10 to-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300"
               >
                 <i class="fas fa-link text-2xl text-primary"></i>
               </div>
@@ -223,13 +235,18 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-12">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <footer class="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white py-12 overflow-hidden">
+      <!-- Background Pattern -->
+      <div class="absolute inset-0 opacity-5">
+        <div class="absolute inset-0" style="background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0); background-size: 20px 20px;"></div>
+      </div>
+      
+      <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid md:grid-cols-4 gap-8">
           <div class="col-span-2">
             <h3 class="text-2xl font-bold mb-4">
               <i class="fas fa-store text-primary mr-2"></i>
-              EtsyFlow
+              ListGenie
             </h3>
             <p class="text-gray-400 mb-4">
               Streamline your Etsy listing creation with AI-powered automation.
@@ -239,19 +256,19 @@
             <div class="flex space-x-4">
               <a
                 href="#"
-                class="text-gray-400 hover:text-white transition-colors"
+                class="text-gray-400 hover:text-white transition-all duration-300 hover:scale-110"
               >
                 <i class="fab fa-twitter text-xl"></i>
               </a>
               <a
                 href="#"
-                class="text-gray-400 hover:text-white transition-colors"
+                class="text-gray-400 hover:text-white transition-all duration-300 hover:scale-110"
               >
                 <i class="fab fa-facebook text-xl"></i>
               </a>
               <a
                 href="#"
-                class="text-gray-400 hover:text-white transition-colors"
+                class="text-gray-400 hover:text-white transition-all duration-300 hover:scale-110"
               >
                 <i class="fab fa-instagram text-xl"></i>
               </a>
@@ -326,7 +343,7 @@
         </div>
         <div class="border-t border-gray-800 mt-8 pt-8 text-center">
           <p class="text-gray-400">
-            © 2025 EtsyFlow. All rights reserved. 
+            © 2025 ListGenie. All rights reserved. 
             sellers.
           </p>
         </div>

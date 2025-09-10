@@ -1,4 +1,4 @@
-// Settings functionality for EtsyFlow
+// Settings functionality for ListGenie
 class SettingsManager {
     constructor() {
         this.settings = {
@@ -14,7 +14,7 @@ class SettingsManager {
                 dimensions: { width: 2000, height: 2000 }
             },
             googleDrive: {
-                folderName: 'EtsyFlow Backups',
+                folderName: 'ListGenie Backups',
                 autoOrganize: false
             },
             authentication: {
@@ -224,7 +224,7 @@ class SettingsManager {
         
         switch (name) {
             case 'driveFolder':
-                this.settings.googleDrive.folderName = value || 'EtsyFlow Backups';
+                this.settings.googleDrive.folderName = value || 'ListGenie Backups';
                 break;
             case 'autoOrganize':
                 this.settings.googleDrive.autoOrganize = checked;
@@ -448,7 +448,7 @@ class SettingsManager {
             }
             
             // Save to localStorage
-            localStorage.setItem('etsyflow-settings', JSON.stringify(this.settings));
+            localStorage.setItem('ListGenie-settings', JSON.stringify(this.settings));
             
             // Send to backend using API client
             await window.apiClient.saveSettings(this.settings);
@@ -547,7 +547,7 @@ class SettingsManager {
             }
             
             // Fallback to localStorage
-            const saved = localStorage.getItem('etsyflow-settings');
+            const saved = localStorage.getItem('ListGenie-settings');
             if (saved) {
                 try {
                     const parsedSettings = JSON.parse(saved);

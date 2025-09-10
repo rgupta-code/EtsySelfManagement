@@ -1,4 +1,4 @@
-// Main application controller for EtsyFlow
+// Main application controller for ListGenie
 class App {
     constructor() {
         this.isInitialized = false;
@@ -32,7 +32,7 @@ class App {
             this.setupPeriodicAuthCheck();
 
             this.isInitialized = true;
-            console.log('EtsyFlow app initialized successfully');
+            console.log('ListGenie app initialized successfully');
 
         } catch (error) {
             console.error('Failed to initialize app:', error);

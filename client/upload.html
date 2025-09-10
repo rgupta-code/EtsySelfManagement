@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Upload Images - EtsyFlow</title>
+  <title>Upload Images - ListGenie</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -11,8 +11,11 @@
       theme: {
         extend: {
           colors: {
-            primary: '#f97316',
-            'primary-dark': '#ea580c',
+            primary: '#6366f1',
+            'primary-dark': '#4f46e5',
+            'secondary': '#3b82f6',
+            'accent': '#8b5cf6',
+            'lavender': '#e0e7ff',
             'gray-50': '#f9fafb',
             'gray-100': '#f3f4f6',
             'gray-200': '#e5e7eb',
@@ -32,15 +35,15 @@
   <link rel="stylesheet" href="css/styles.css"/>
 </head>
 
-<body class="bg-gray-50 min-h-screen text-gray-800">
+<body class="min-h-screen text-gray-800">
   <!-- Navigation -->
-  <nav class="bg-white shadow-sm border-b border-gray-200">
+  <nav class="bg-white/95 backdrop-blur-xl shadow-sm border-b border-white/20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
         <div class="flex items-center">
           <h1 class="text-xl font-bold text-gray-900 tracking-tight">
             <i class="fas fa-store text-primary mr-2"></i>
-            EtsyFlow
+            ListGenie
           </h1>
         </div>
 
@@ -100,7 +103,9 @@
 
       <!-- Header -->
       <div class="text-center mb-5">
-        <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-3">Upload Your Product Images</h1>
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-3">
+          <span class="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">Upload Your Product Images</span>
+        </h1>
         <p class="text-base md:text-lg text-gray-500 max-w-3xl mx-auto">
           Transform your product photos into professional Etsy listings with AI-powered watermarks, collages, and metadata generation.
         </p>
@@ -123,9 +128,9 @@
 
         <!-- Upload Area -->
         <div id="upload-container" class="mb-8">
-          <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-xl p-5 text-center hover:border-primary transition-colors cursor-pointer bg-white">
+          <div id="drop-zone" class="modern-card border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-primary transition-all duration-300 cursor-pointer group">
             <div id="drop-zone-content">
-              <i class="fas fa-cloud-upload-alt text-5xl text-gray-400 mb-4"></i>
+              <i class="fas fa-cloud-upload-alt text-5xl text-gray-400 mb-4 group-hover:text-primary transition-colors duration-300"></i>
               <h3 class="text-lg font-semibold text-gray-900 mb-1">Drop your images here</h3>
               <p class="text-gray-600 text-sm mb-2">or click to browse files</p>
               <p class="text-xs text-gray-500">Supports JPEG, PNG, WebP • Max 10MB per file</p>
@@ -141,7 +146,7 @@
 
           <!-- Upload Button -->
           <div class="text-center">
-            <button id="upload-button" class="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl text-sm font-semibold transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+            <button id="upload-button" class="btn-primary px-6 py-3 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
               <i class="fas fa-magic mr-2"></i>
               Process Images
             </button>
@@ -155,7 +160,7 @@
         <div class="flex-1 lg:w-4/5">
           <!-- Selected Images Display -->
           <div id="selected-images-display" class="hidden mb-4">
-            <div class="bg-white rounded-xl shadow p-5">
+            <div class="modern-card p-5">
               <h3 class="text-base font-semibold text-gray-900 mb-3">Processing Images</h3>
               <div id="selected-images-grid" class="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2"></div>
             </div>
@@ -163,9 +168,9 @@
 
           <!-- Processing Status -->
           <div id="processing-container">
-            <div class="bg-white rounded-xl shadow p-6 h-full flex flex-col">
+            <div class="modern-card p-6 h-full flex flex-col">
               <div class="text-center mb-6">
-                <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                <div class="w-12 h-12 bg-gradient-to-br from-primary/10 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <i class="fas fa-cog fa-spin text-lg text-primary"></i>
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Processing Your Images</h3>

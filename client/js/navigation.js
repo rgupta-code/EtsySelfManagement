@@ -1,4 +1,4 @@
-// Navigation functionality for EtsyFlow
+// Navigation functionality for ListGenie
 class NavigationManager {
     constructor() {
         this.currentPage = 'home';
@@ -137,11 +137,11 @@ class NavigationManager {
 
     updatePageTitle(pageName) {
         const titles = {
-            home: 'EtsyFlow - Streamline Your Etsy Listings',
-            upload: 'Upload Images - EtsyFlow',
-            settings: 'Settings - EtsyFlow',
-            about: 'About Us - EtsyFlow',
-            contact: 'Contact Us - EtsyFlow'
+            home: 'ListGenie - Streamline Your Etsy Listings',
+            upload: 'Upload Images - ListGenie',
+            settings: 'Settings - ListGenie',
+            about: 'About Us - ListGenie',
+            contact: 'Contact Us - ListGenie'
         };
 
         document.title = titles[pageName] || titles.home;
@@ -208,7 +208,7 @@ class NavigationManager {
                 <div>
                     <h3 class="text-sm font-medium text-red-800">Error Sending Message</h3>
                     <p class="mt-1 text-sm text-red-700">
-                        There was a problem sending your message. Please try again or contact us directly at support@etsyflow.com.
+                        There was a problem sending your message. Please try again or contact us directly at support@ListGenie.com.
                     </p>
                 </div>
             </div>
