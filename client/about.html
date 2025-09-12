@@ -80,81 +80,248 @@
 
     <!-- Main Content -->
     <main>
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div class="text-center mb-12">
-                <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                    About ListGenie
-                </h1>
-                <p class="text-xl text-gray-600">
-                    Empowering Etsy sellers with AI-driven listing automation
-                </p>
+        <!-- Hero Section -->
+        <div class="relative py-10 overflow-hidden">
+            <!-- Background Gradient -->
+            <div class="absolute inset-0 bg-gradient-to-br from-primary/10 via-blue-50/50 to-indigo-50/30"></div>
+            <!-- Animated Background Elements -->
+            <div class="absolute inset-0 overflow-hidden">
+                <div class="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary/20 to-blue-300/20 rounded-full blur-3xl animate-pulse"></div>
+                <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-indigo-200/20 to-purple-300/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
             </div>
+            
+            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+                        About <span class="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">ListGenie</span>
+                    </h1>
+                </div>
+            </div>
+        </div>
 
-            <div class="prose prose-lg max-w-none">
-                <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-4">Our Mission</h2>
-                    <p class="text-gray-600 mb-6">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+
+            <!-- About Section -->
+            <div class="bg-white rounded-3xl shadow-xl p-8 mb-12 border border-gray-100">
+                <div class="text-center mb-8">
+                    <p class="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
                         ListGenie was created to solve the time-consuming challenge of creating professional Etsy listings. 
                         We understand that as an Etsy seller, your time is better spent creating amazing products rather than 
                         wrestling with image editing and writing compelling descriptions.
                     </p>
-                    
-                    <h3 class="text-xl font-semibold text-gray-900 mb-4">What We Do</h3>
-                    <div class="grid md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <h4 class="font-semibold text-gray-900 mb-2">Image Processing</h4>
-                            <ul class="text-gray-600 space-y-1">
-                                <li>• Automatic watermarking</li>
-                                <li>• Professional collage creation</li>
-                                <li>• Etsy-optimized dimensions</li>
-                                <li>• High-quality compression</li>
-                            </ul>
+                </div>
+
+                <!-- Features Section Inside About Box -->
+                <div class="grid lg:grid-cols-2 gap-8 mt-12">
+                    <div class="bg-gradient-to-br from-primary/5 to-blue-50 rounded-2xl p-6 border border-primary/10">
+                        <div class="flex items-center mb-6">
+                            <div class="w-16 h-16 bg-gradient-to-br from-primary/20 to-blue-100 rounded-2xl flex items-center justify-center mr-4">
+                                <i class="fas fa-images text-2xl text-primary"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-900">Image Processing</h3>
                         </div>
-                        <div>
-                            <h4 class="font-semibold text-gray-900 mb-2">AI-Powered Content</h4>
-                            <ul class="text-gray-600 space-y-1">
-                                <li>• Compelling product titles</li>
-                                <li>• SEO-optimized descriptions</li>
-                                <li>• Relevant tag suggestions</li>
-                                <li>• Market-tested formats</li>
-                            </ul>
-                        </div>
+                        <ul class="space-y-3">
+                            <li class="flex items-center text-gray-700">
+                                <i class="fas fa-check-circle text-primary mr-3"></i>
+                                Automatic watermarking
+                            </li>
+                            <li class="flex items-center text-gray-700">
+                                <i class="fas fa-check-circle text-primary mr-3"></i>
+                                Professional collage creation
+                            </li>
+                            <li class="flex items-center text-gray-700">
+                                <i class="fas fa-check-circle text-primary mr-3"></i>
+                                Etsy-optimized dimensions
+                            </li>
+                            <li class="flex items-center text-gray-700">
+                                <i class="fas fa-check-circle text-primary mr-3"></i>
+                                High-quality compression
+                            </li>
+                        </ul>
                     </div>
+
+                    <div class="bg-gradient-to-br from-accent/5 to-purple-50 rounded-2xl p-6 border border-accent/10">
+                        <div class="flex items-center mb-6">
+                            <div class="w-16 h-16 bg-gradient-to-br from-accent/20 to-purple-100 rounded-2xl flex items-center justify-center mr-4">
+                                <i class="fas fa-robot text-2xl text-accent"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-900">AI-Powered Content</h3>
+                        </div>
+                        <ul class="space-y-3">
+                            <li class="flex items-center text-gray-700">
+                                <i class="fas fa-check-circle text-accent mr-3"></i>
+                                Compelling product titles
+                            </li>
+                            <li class="flex items-center text-gray-700">
+                                <i class="fas fa-check-circle text-accent mr-3"></i>
+                                SEO-optimized descriptions
+                            </li>
+                            <li class="flex items-center text-gray-700">
+                                <i class="fas fa-check-circle text-accent mr-3"></i>
+                                Relevant tag suggestions
+                            </li>
+                            <li class="flex items-center text-gray-700">
+                                <i class="fas fa-check-circle text-accent mr-3"></i>
+                                Market-tested formats
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- How It Works Section -->
+            <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
                     
-                    <h3 class="text-xl font-semibold text-gray-900 mb-4">How It Works</h3>
-                    <div class="space-y-4">
-                        <div class="flex items-start">
-                            <div class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center mr-4 mt-1">
-                                <span class="text-sm font-semibold">1</span>
-                            </div>
-                            <div>
-                                <h5 class="font-semibold text-gray-900">Upload Your Images</h5>
-                                <p class="text-gray-600">Simply drag and drop your product photos into our secure upload area.</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start">
-                            <div class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center mr-4 mt-1">
-                                <span class="text-sm font-semibold">2</span>
-                            </div>
-                            <div>
-                                <h5 class="font-semibold text-gray-900">AI Analysis & Processing</h5>
-                                <p class="text-gray-600">Our AI analyzes your images and generates professional watermarks, collages, and compelling listing content.</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start">
-                            <div class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center mr-4 mt-1">
-                                <span class="text-sm font-semibold">3</span>
-                            </div>
-                            <div>
-                                <h5 class="font-semibold text-gray-900">Automatic Listing Creation</h5>
-                                <p class="text-gray-600">We create a draft listing in your Etsy shop with all processed images and optimized content.</p>
-                            </div>
-                        </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-8 text-center">How It Works</h3>
+                <div class="flex justify-center mb-8">
+                    <img 
+                        src="images/steps.png" 
+                        alt="How ListGenie Works - Step by Step Process" 
+                        class="max-w-5xl w-full h-auto rounded-2xl shadow-lg"
+                    />
+                </div>
+            </div>
+
+            <!-- Call to Action Section -->
+            <div class="text-center mt-16">
+                <div class="bg-gradient-to-r from-primary to-blue-600 rounded-3xl p-12 text-white">
+                    <h3 class="text-3xl font-bold mb-4">Ready to Transform Your Etsy Listings?</h3>
+                    <p class="text-xl mb-8 opacity-90">Join thousands of successful Etsy sellers who trust ListGenie</p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <a
+                            href="upload.html"
+                            class="bg-white text-primary px-8 py-4 rounded-2xl text-lg font-semibold inline-flex items-center justify-center hover:bg-gray-100 transition-colors"
+                        >
+                            <i class="fas fa-upload mr-2"></i>
+                            Get Started Now
+                        </a>
+                        <a
+                            href="contact.html"
+                            class="border-2 border-white text-white px-8 py-4 rounded-2xl text-lg font-semibold inline-flex items-center justify-center hover:bg-white hover:text-primary transition-colors"
+                        >
+                            <i class="fas fa-envelope mr-2"></i>
+                            Contact Us
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </main>
+
+    <!-- Footer -->
+    <footer class="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white py-12 overflow-hidden">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-5">
+            <div class="absolute inset-0" style="background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0); background-size: 20px 20px;"></div>
+        </div>
+        
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="col-span-2">
+                    <h3 class="text-2xl font-bold mb-4">
+                        <i class="fas fa-store text-primary mr-2"></i>
+                        ListGenie
+                    </h3>
+                    <p class="text-gray-400 mb-4">
+                        Streamline your Etsy listing creation with AI-powered automation.
+                        Save time, increase sales, and focus on what you do best -
+                        creating amazing products.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a
+                            href="#"
+                            class="text-gray-400 hover:text-white transition-all duration-300 hover:scale-110"
+                        >
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                        <a
+                            href="#"
+                            class="text-gray-400 hover:text-white transition-all duration-300 hover:scale-110"
+                        >
+                            <i class="fab fa-facebook text-xl"></i>
+                        </a>
+                        <a
+                            href="#"
+                            class="text-gray-400 hover:text-white transition-all duration-300 hover:scale-110"
+                        >
+                            <i class="fab fa-instagram text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li>
+                            <a
+                                href="home.html"
+                                class="text-gray-400 hover:text-white transition-colors"
+                                >Home</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                href="upload.html"
+                                class="text-gray-400 hover:text-white transition-colors"
+                                >Upload</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                href="about.html"
+                                class="text-gray-400 hover:text-white transition-colors"
+                                >About</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                href="contact.html"
+                                class="text-gray-400 hover:text-white transition-colors"
+                                >Contact</a
+                            >
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Support</h4>
+                    <ul class="space-y-2">
+                        <li>
+                            <a
+                                href="#"
+                                class="text-gray-400 hover:text-white transition-colors"
+                                >Help Center</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                href="#"
+                                class="text-gray-400 hover:text-white transition-colors"
+                                >Privacy Policy</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                href="#"
+                                class="text-gray-400 hover:text-white transition-colors"
+                                >Terms of Service</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                href="contact.html"
+                                class="text-gray-400 hover:text-white transition-colors"
+                                >Contact Us</a
+                            >
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center">
+                <p class="text-gray-400">
+                    © 2025 ListGenie. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </footer>
 
     <!-- JavaScript -->
     <script src="js/navigation.js"></script>
