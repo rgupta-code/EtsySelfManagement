@@ -453,13 +453,19 @@ router.get('/google/callback', asyncHandler(async (req, res) => {
       googleAuth: googleAuthData
     });
     
+    // Generate JWT token for API authentication
+    const jwtToken = generateToken({
+      userId: sessionData.userId,
+      email: userInfo.email
+    });
+    
     // Verify the data was stored correctly
     const storedSession = getUserSession(sessionData.userId);
     console.log('Stored session after Google auth:', storedSession);
     
     // Redirect to frontend with success
     const redirectUrl = process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`;
-    res.redirect(`${redirectUrl}/settings.html?auth=success&service=google&token=${sessionData.accessToken || 'existing'}`);
+    res.redirect(`${redirectUrl}/settings.html?auth=success&service=google&token=${jwtToken}`);
     
   } catch (error) {
     console.error('Google OAuth callback error:', error);
@@ -640,14 +646,19 @@ router.get('/etsy/callback', asyncHandler(async (req, res) => {
       etsyAuth: etsyAuthData
     });
     
+    // Generate JWT token for API authentication
+    const jwtToken = generateToken({
+      userId: sessionData.userId,
+      email: userInfo.email || `etsy_${userInfo.user_id}@etsy.local`
+    });
+    
     // Verify the data was stored correctly
     const storedSession = getUserSession(sessionData.userId);
-    console.log('Stored session after Etsy auth:', storedSession);
     console.log('Etsy authentication stored successfully');
     
     // Redirect to frontend with success
     const redirectUrl = process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`;
-    const finalUrl = `${redirectUrl}/settings.html?auth=success&service=etsy&token=${sessionData.accessToken || 'existing'}&shop=${encodeURIComponent(shop.shop_name)}`;
+    const finalUrl = `${redirectUrl}/settings.html?auth=success&service=etsy&token=${jwtToken}&shop=${encodeURIComponent(shop.shop_name)}`;
     console.log('Redirecting to:', finalUrl);
     res.redirect(finalUrl);
     

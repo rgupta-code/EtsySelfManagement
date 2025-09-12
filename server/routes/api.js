@@ -124,7 +124,6 @@ async function processUploadAsync(processingId, files, options = {}, user = null
       throw new Error('No valid images to process');
     }
 
-    console.log('***********loading user settings***********');
     // Step 2: Load user settings
     updateProcessingStatus(processingId, 'settings', 'started');
     const userId = user?.id || options.userId || 'default';
@@ -485,5 +484,293 @@ router.get('/health', (req, res) => {
     }
   });
 });
+
+/**
+ * Authentication status endpoint
+ */
+router.get('/auth/status', optionalAuth, asyncHandler(async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.json({
+        success: true,
+        authenticated: false,
+        services: {
+          google: false,
+          etsy: false
+        }
+      });
+    }
+
+    const session = req.user.session;
+    const googleAuth = session.googleAuth;
+    const etsyAuth = session.etsyAuth;
+
+    res.json({
+      success: true,
+      authenticated: true,
+      user: {
+        id: req.user.id,
+        email: req.user.email
+      },
+      services: {
+        google: !!(googleAuth && googleAuth.accessToken),
+        etsy: !!(etsyAuth && etsyAuth.accessToken)
+      }
+    });
+  } catch (error) {
+    console.error('Auth status error:', error);
+    throw new APIError(`Failed to get auth status: ${error.message}`, 500, 'AUTH_STATUS_ERROR');
+  }
+}));
+
+/**
+ * Dashboard API endpoints
+ */
+
+/**
+ * Get shop listings for dashboard
+ */
+router.get('/dashboard/listings', requireAuth, requireEtsyAuth, asyncHandler(async (req, res) => {
+  try {
+    const { limit = 50, offset = 0 } = req.query;
+    
+    // Initialize Etsy service with user's tokens
+    await etsyService.initialize({
+      client_id: process.env.ETSY_CLIENT_ID,
+      client_secret: process.env.ETSY_CLIENT_SECRET,
+      redirect_uri: process.env.ETSY_REDIRECT_URI
+    });
+    
+    // Set user's access token
+    etsyService.setAccessToken(req.user.session.etsyAuth.accessToken);
+    
+    const listings = await etsyService.getShopListings(parseInt(limit), parseInt(offset));
+    
+    res.json({
+      success: true,
+      data: listings
+    });
+  } catch (error) {
+    console.error('Dashboard listings error:', error);
+    throw new APIError(`Failed to fetch listings: ${error.message}`, 500, 'DASHBOARD_LISTINGS_ERROR');
+  }
+}));
+
+/**
+ * Get shop receipts for sales data
+ */
+router.get('/dashboard/receipts', requireAuth, requireEtsyAuth, asyncHandler(async (req, res) => {
+  try {
+    const { limit = 50, offset = 0 } = req.query;
+    
+    // Initialize Etsy service with user's tokens
+    await etsyService.initialize({
+      client_id: process.env.ETSY_CLIENT_ID,
+      client_secret: process.env.ETSY_CLIENT_SECRET,
+      redirect_uri: process.env.ETSY_REDIRECT_URI
+    });
+    
+    // Set user's access token
+    etsyService.setAccessToken(req.user.session.etsyAuth.accessToken);
+    
+    const receipts = await etsyService.getShopReceipts(parseInt(limit), parseInt(offset));
+    
+    res.json({
+      success: true,
+      data: receipts
+    });
+  } catch (error) {
+    console.error('Dashboard receipts error:', error);
+    throw new APIError(`Failed to fetch receipts: ${error.message}`, 500, 'DASHBOARD_RECEIPTS_ERROR');
+  }
+}));
+
+/**
+ * Get shop reviews
+ */
+router.get('/dashboard/reviews', requireAuth, requireEtsyAuth, asyncHandler(async (req, res) => {
+  try {
+    const { limit = 50, offset = 0 } = req.query;
+    
+    // Initialize Etsy service with user's tokens
+    await etsyService.initialize({
+      client_id: process.env.ETSY_CLIENT_ID,
+      client_secret: process.env.ETSY_CLIENT_SECRET,
+      redirect_uri: process.env.ETSY_REDIRECT_URI
+    });
+    
+    // Set user's access token
+    etsyService.setAccessToken(req.user.session.etsyAuth.accessToken);
+    
+    const reviews = await etsyService.getShopReviews(parseInt(limit), parseInt(offset));
+    
+    res.json({
+      success: true,
+      data: reviews
+    });
+  } catch (error) {
+    console.error('Dashboard reviews error:', error);
+    throw new APIError(`Failed to fetch reviews: ${error.message}`, 500, 'DASHBOARD_REVIEWS_ERROR');
+  }
+}));
+
+/**
+ * Get shop statistics
+ */
+router.get('/dashboard/stats', requireAuth, requireEtsyAuth, asyncHandler(async (req, res) => {
+  try {
+    // Initialize Etsy service with user's tokens
+    await etsyService.initialize({
+      client_id: process.env.ETSY_CLIENT_ID,
+      client_secret: process.env.ETSY_CLIENT_SECRET,
+      redirect_uri: process.env.ETSY_REDIRECT_URI
+    });
+    
+    // Set user's access token
+    etsyService.setAccessToken(req.user.session.etsyAuth.accessToken);
+    
+    const stats = await etsyService.getShopStats();
+    
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('Dashboard stats error:', error);
+    throw new APIError(`Failed to fetch shop stats: ${error.message}`, 500, 'DASHBOARD_STATS_ERROR');
+  }
+}));
+
+/**
+ * Get featured listings (marketplace simulation)
+ */
+router.get('/marketplace/featured', requireAuth, requireEtsyAuth, asyncHandler(async (req, res) => {
+  try {
+    const { sortOn, sortOrder, limit = 20, offset = 0 } = req.query;
+    
+    // Initialize Etsy service with user's tokens
+    await etsyService.initialize({
+      client_id: process.env.ETSY_CLIENT_ID,
+      client_secret: process.env.ETSY_CLIENT_SECRET,
+      redirect_uri: process.env.ETSY_REDIRECT_URI
+    });
+    
+    // Set user's access token
+    etsyService.setAccessToken(req.user.session.etsyAuth.accessToken);
+    
+    const searchOptions = {
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      sortOn,
+      sortOrder
+    };
+    
+    const results = await etsyService.getFeaturedListings(searchOptions);
+    
+    res.json({
+      success: true,
+      data: results
+    });
+  } catch (error) {
+    console.error('Featured listings error:', error);
+    throw new APIError(`Failed to get featured listings: ${error.message}`, 500, 'FEATURED_LISTINGS_ERROR');
+  }
+}));
+
+/**
+ * Get detailed listing information
+ */
+router.get('/marketplace/listing/:listingId', requireAuth, requireEtsyAuth, asyncHandler(async (req, res) => {
+  try {
+    const { listingId } = req.params;
+    
+    // Initialize Etsy service with user's tokens
+    await etsyService.initialize({
+      client_id: process.env.ETSY_CLIENT_ID,
+      client_secret: process.env.ETSY_CLIENT_SECRET,
+      redirect_uri: process.env.ETSY_REDIRECT_URI
+    });
+    
+    // Set user's access token
+    etsyService.setAccessToken(req.user.session.etsyAuth.accessToken);
+    
+    const [listing, reviews] = await Promise.all([
+      etsyService.getListingDetails(listingId),
+      etsyService.getListingReviews(listingId).catch(() => ({ results: [] })) // Reviews might not be available
+    ]);
+    
+    res.json({
+      success: true,
+      data: {
+        listing,
+        reviews: reviews.results || []
+      }
+    });
+  } catch (error) {
+    console.error('Listing details error:', error);
+    throw new APIError(`Failed to get listing details: ${error.message}`, 500, 'LISTING_DETAILS_ERROR');
+  }
+}));
+
+
+/**
+ * Get comprehensive dashboard data
+ */
+router.get('/dashboard/overview', requireAuth, requireEtsyAuth, asyncHandler(async (req, res) => {
+  try {
+    // Initialize Etsy service with user's tokens
+    await etsyService.initialize({
+      client_id: process.env.ETSY_CLIENT_ID,
+      client_secret: process.env.ETSY_CLIENT_SECRET,
+      redirect_uri: process.env.ETSY_REDIRECT_URI
+    });
+    
+    // Set user's access token and refresh token
+    etsyService.setAccessToken(req.user.session.etsyAuth.accessToken);
+    if (req.user.session.etsyAuth.refreshToken) {
+      etsyService.setRefreshToken(req.user.session.etsyAuth.refreshToken);
+    }
+    
+    // Fetch all dashboard data in parallel
+    const [listings, receipts, reviews, stats] = await Promise.all([
+      etsyService.getMyShopListings({ limit: 20, offset: 0 }),
+      etsyService.getShopReceipts(50, 0),
+      etsyService.getShopReviews(10, 0),
+      etsyService.getShopStats()
+    ]);
+    
+    // Calculate additional metrics
+    const totalSales = receipts.results?.length || 0;
+    const totalRevenue = receipts.results?.reduce((sum, receipt) => {
+      return sum + (receipt.grandtotal || 0);
+    }, 0) || 0;
+    
+    const averageOrderValue = totalSales > 0 ? totalRevenue / totalSales : 0;
+    
+    const averageRating = reviews.results?.length > 0 
+      ? reviews.results.reduce((sum, review) => sum + (review.rating || 0), 0) / reviews.results.length 
+      : 0;
+    
+    res.json({
+      success: true,
+      data: {
+        listings: listings.results || [],
+        receipts: receipts.results || [],
+        reviews: reviews.results || [],
+        stats,
+        metrics: {
+          totalSales,
+          totalRevenue,
+          averageOrderValue,
+          averageRating,
+          totalListings: listings.results?.length || 0
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Dashboard overview error:', error);
+    throw new APIError(`Failed to fetch dashboard data: ${error.message}`, 500, 'DASHBOARD_OVERVIEW_ERROR');
+  }
+}));
 
 module.exports = router;

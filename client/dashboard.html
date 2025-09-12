@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - ListGenie</title>
+    <meta name="description" content="Etsy shop dashboard with analytics and performance metrics" />
+    
+    <!-- Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#6366f1',
+              secondary: '#3b82f6',
+              accent: '#8b5cf6',
+            }
+          }
+        }
+      }
+    </script>
+    
+    <link rel="stylesheet" href="css/styles.css" />
+    <style>
+      .tab-content {
+        display: block;
+      }
+      .tab-content.hidden {
+        display: none;
+      }
+      .tab-button.active {
+        color: #6366f1;
+        border-color: #6366f1;
+      }
+      .tab-button {
+        transition: all 0.2s ease;
+      }
+      .listing-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .listing-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+    <!-- Navigation -->
+    <nav class="bg-white/95 backdrop-blur-xl shadow-sm border-b border-white/20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <h1 class="text-2xl font-bold text-gray-900">
+                <i class="fas fa-store text-primary mr-2"></i>
+                ListGenie
+              </h1>
+            </div>
+          </div>
+          <div class="hidden md:block">
+            <div class="ml-10 flex items-baseline space-x-4">
+              <a
+                href="home.html"
+                class="nav-link text-gray-500 hover:text-primary px-3 py-2 rounded-2xl text-sm font-medium transition-colors"
+                ><i class="fas fa-home mr-2"></i>Home</a
+              >
+              <a
+                href="upload.html"
+                class="nav-link text-gray-500 hover:text-primary px-3 py-2 rounded-2xl text-sm font-medium transition-colors"
+                ><i class="fas fa-upload mr-2"></i>Upload</a
+              >
+              <a
+                href="generate.html"
+                class="nav-link text-gray-500 hover:text-primary px-3 py-2 rounded-2xl text-sm font-medium transition-colors"
+                ><i class="fas fa-magic mr-2"></i>AI</a
+              >
+              <a
+                href="dashboard.html"
+                class="nav-link text-primary bg-primary/10 px-3 py-2 rounded-2xl text-sm font-medium transition-colors"
+                ><i class="fas fa-chart-line mr-2"></i>Dashboard</a
+              >
+              <a
+                href="settings.html"
+                class="nav-link text-gray-500 hover:text-primary px-3 py-2 rounded-2xl text-sm font-medium transition-colors"
+                ><i class="fas fa-cog mr-2"></i>Settings</a
+              >
+              <a
+                href="about.html"
+                class="nav-link text-gray-500 hover:text-primary px-3 py-2 rounded-2xl text-sm font-medium transition-colors"
+                ><i class="fas fa-info-circle mr-2"></i>About</a
+              >
+              <a
+                href="contact.html"
+                class="nav-link text-gray-500 hover:text-primary px-3 py-2 rounded-2xl text-sm font-medium transition-colors"
+                ><i class="fas fa-envelope mr-2"></i>Contact</a
+              >
+            </div>
+          </div>
+          
+          <!-- Mobile menu button -->
+          <div class="md:hidden">
+            <button
+              type="button"
+              id="mobile-menu-button"
+              class="text-gray-500 hover:text-primary focus:outline-none focus:text-primary"
+            >
+              <i class="fas fa-bars text-xl"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Mobile menu -->
+      <div id="mobile-menu" class="hidden md:hidden">
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white/95 backdrop-blur-xl">
+          <a
+            href="home.html"
+            class="block text-gray-500 hover:text-primary px-3 py-2 rounded-2xl text-base font-medium"
+            ><i class="fas fa-home mr-2"></i>Home</a
+          >
+          <a
+            href="upload.html"
+            class="block text-gray-500 hover:text-primary px-3 py-2 rounded-2xl text-base font-medium"
+            ><i class="fas fa-upload mr-2"></i>Upload</a
+          >
+          <a
+            href="generate.html"
+            class="block text-gray-500 hover:text-primary px-3 py-2 rounded-2xl text-base font-medium"
+            ><i class="fas fa-magic mr-2"></i>AI</a
+          >
+          <a
+            href="dashboard.html"
+            class="block text-primary bg-primary/10 px-3 py-2 rounded-2xl text-base font-medium"
+            ><i class="fas fa-chart-line mr-2"></i>Dashboard</a
+          >
+          <a
+            href="settings.html"
+            class="block text-gray-500 hover:text-primary px-3 py-2 rounded-2xl text-base font-medium"
+            ><i class="fas fa-cog mr-2"></i>Settings</a
+          >
+          <a
+            href="about.html"
+            class="block text-gray-500 hover:text-primary px-3 py-2 rounded-2xl text-base font-medium"
+            ><i class="fas fa-info-circle mr-2"></i>About</a
+          >
+          <a
+            href="contact.html"
+            class="block text-gray-500 hover:text-primary px-3 py-2 rounded-2xl text-base font-medium"
+            ><i class="fas fa-envelope mr-2"></i>Contact</a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Header Section -->
+      <div class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">
+          <i class="fas fa-chart-line text-primary mr-3"></i>
+          Dashboard
+        </h1>
+        <p class="text-gray-600 text-lg">Monitor your Etsy shop performance and analytics</p>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loading-state" class="text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <p class="mt-4 text-gray-600">Loading dashboard data...</p>
+      </div>
+
+      <!-- Error State -->
+      <div id="error-state" class="hidden text-center py-12">
+        <div class="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+          <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-4"></i>
+          <h3 class="text-lg font-semibold text-red-800 mb-2">Error Loading Dashboard</h3>
+          <p class="text-red-600 mb-4" id="error-message">Unable to load dashboard data. Please try again.</p>
+          <button id="retry-button" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+            <i class="fas fa-refresh mr-2"></i>Retry
+          </button>
+        </div>
+      </div>
+
+      <!-- Dashboard Content -->
+      <div id="dashboard-content" class="hidden">
+        <!-- Tab Navigation -->
+        <div class="mb-8">
+          <div class="border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8">
+              <button id="my-shop-tab" class="tab-button active py-2 px-1 border-b-2 border-primary font-medium text-sm text-primary">
+                <i class="fas fa-store mr-2"></i>My Shop
+              </button>
+              <button id="marketplace-tab" class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                <i class="fas fa-globe mr-2"></i>Etsy Marketplace
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="my-shop-content" class="tab-content">
+          <!-- Key Metrics Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <!-- Total Sales Card -->
+          <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-blue-100 text-sm font-medium">Total Sales</p>
+                <p class="text-3xl font-bold" id="total-sales">0</p>
+              </div>
+              <div class="bg-white/20 rounded-full p-3">
+                <i class="fas fa-shopping-cart text-2xl"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Revenue Card -->
+          <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-green-100 text-sm font-medium">Total Revenue</p>
+                <p class="text-3xl font-bold" id="total-revenue">$0</p>
+              </div>
+              <div class="bg-white/20 rounded-full p-3">
+                <i class="fas fa-dollar-sign text-2xl"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Average Order Value Card -->
+          <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-purple-100 text-sm font-medium">Avg Order Value</p>
+                <p class="text-3xl font-bold" id="avg-order-value">$0</p>
+              </div>
+              <div class="bg-white/20 rounded-full p-3">
+                <i class="fas fa-chart-bar text-2xl"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Average Rating Card -->
+          <div class="bg-gradient-to-br from-yellow-500 to-orange-500 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-yellow-100 text-sm font-medium">Avg Rating</p>
+                <p class="text-3xl font-bold" id="avg-rating">0.0</p>
+              </div>
+              <div class="bg-white/20 rounded-full p-3">
+                <i class="fas fa-star text-2xl"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <!-- Sales Trend Chart -->
+          <div class="bg-white rounded-2xl p-6 shadow-lg">
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">
+              <i class="fas fa-chart-line text-primary mr-2"></i>
+              Sales Trend
+            </h3>
+            <div class="h-64">
+              <canvas id="sales-chart"></canvas>
+            </div>
+          </div>
+
+          <!-- Revenue Chart -->
+          <div class="bg-white rounded-2xl p-6 shadow-lg">
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">
+              <i class="fas fa-chart-pie text-primary mr-2"></i>
+              Revenue Breakdown
+            </h3>
+            <div class="h-64">
+              <canvas id="revenue-chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Listings Table -->
+        <div class="bg-white rounded-2xl p-6 shadow-lg mb-8">
+          <h3 class="text-xl font-semibold text-gray-900 mb-6">
+            <i class="fas fa-trophy text-primary mr-2"></i>
+            Top Performing Listings
+          </h3>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Listing</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Views</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Favorites</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody id="listings-table-body" class="bg-white divide-y divide-gray-200">
+                <!-- Table rows will be populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+          <!-- Recent Reviews Section -->
+          <div class="bg-white rounded-2xl p-6 shadow-lg">
+            <h3 class="text-xl font-semibold text-gray-900 mb-6">
+              <i class="fas fa-comments text-primary mr-2"></i>
+              Recent Reviews
+            </h3>
+            <div id="reviews-container" class="space-y-4">
+              <!-- Review cards will be populated by JavaScript -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Marketplace Content -->
+        <div id="marketplace-content" class="tab-content hidden">
+          <!-- Featured Listings Header -->
+          <div class="bg-white rounded-2xl p-6 shadow-lg mb-8">
+            <div class="flex flex-col md:flex-row gap-4 mb-6">
+              <div class="flex-1">
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                  <i class="fas fa-star text-yellow-500 mr-2"></i>Featured Listings
+                </h3>
+                <p class="text-gray-600">Discover trending and popular listings from your shop</p>
+              </div>
+              <div class="flex gap-2">
+                <select id="sort-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                  <option value="score">Most Relevant</option>
+                  <option value="price_asc">Price: Low to High</option>
+                  <option value="price_desc">Price: High to Low</option>
+                  <option value="created">Most Recent</option>
+                  <option value="updated">Recently Updated</option>
+                </select>
+                <button id="refresh-button" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors">
+                  <i class="fas fa-refresh mr-2"></i>Refresh
+                </button>
+              </div>
+            </div>
+            <div class="flex justify-between items-center">
+              <p id="marketplace-results-count" class="text-gray-600">Loading featured listings...</p>
+            </div>
+          </div>
+
+          <!-- Marketplace Listings Grid -->
+          <div id="marketplace-listings" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- Marketplace listings will be populated by JavaScript -->
+          </div>
+
+          <!-- Load More Button -->
+          <div class="text-center mt-8">
+            <button id="load-more-button" class="bg-gray-100 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-200 transition-colors hidden">
+              <i class="fas fa-plus mr-2"></i>Load More Listings
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Listing Detail Modal -->
+    <div id="listing-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+      <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div class="p-6">
+            <div class="flex justify-between items-start mb-6">
+              <h3 id="modal-title" class="text-2xl font-bold text-gray-900">Listing Details</h3>
+              <button id="close-modal" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+              </button>
+            </div>
+            <div id="modal-content">
+              <!-- Modal content will be populated by JavaScript -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api-client.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/dashboard.js"></script>
+  </body>
+</html>
