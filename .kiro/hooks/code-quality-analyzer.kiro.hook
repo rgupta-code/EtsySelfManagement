@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "name": "Code Quality Analyzer",
+  "description": "Monitors source code files for changes and analyzes modified code for potential improvements including code smells, design patterns, and best practices. Generates suggestions for improving code quality while maintaining existing functionality.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered",
+    "patterns": [
+      "server/**/*.js",
+      "client/**/*.js",
+      "scripts/**/*.js",
+      "*.js"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Analyze the recently modified code files for potential improvements limit to maximum of 5 suggestions at a time. Focus on:\n\n1. **Code Smells**: Identify any code smells such as long methods, duplicate code, large classes, or complex conditionals\n2. **Design Patterns**: Suggest appropriate design patterns that could improve the code structure\n3. **Best Practices**: Check adherence to JavaScript/Node.js best practices including:\n   - Proper error handling with async/await\n   - ESLint compliance\n   - Security considerations for file uploads and API calls\n   - Performance optimizations\n4. **Readability**: Suggest improvements for variable naming, function organization, and code comments\n5. **Maintainability**: Identify areas where code could be refactored for better maintainability\n6. **Architecture**: Ensure code follows the project's Express.js backend and clean frontend architecture\n\nProvide specific, actionable suggestions while ensuring the existing functionality remains intact. Consider the project context as an Etsy seller management tool with image processing, AI integration, and API connections."
+  }
+}
