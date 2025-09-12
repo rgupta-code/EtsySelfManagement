@@ -21,21 +21,40 @@ This project leverages advanced AI development capabilities through Kiro:
 - Automated code generation following project specifications
 
 ### **Agent Hooks**
-- **Auto-testing**: Triggers test execution when code files are saved
-- **Documentation Updates**: Automatically updates docs when features change
-- **Code Formatting**: Ensures consistent code style across the project
-- **Changelog Generation**: Maintains project history automatically
+- **Code Analyzer**: Automatically analyzes code quality and suggests improvements when files are modified
+- **Task Synchronization**: Updates GitHub issue status when features are implemented or completed
+- **Task Completion Commit**: When a task is marked as completed in `tasks.md`, automatically stages all changes and requests user permission to commit
 
 ### **Agent Steering**
-- **Coding Standards**: Enforces consistent Node.js/Express patterns
-- **Visual Guidelines**: Maintains modern, clean UI design principles
-- **Architecture Rules**: Ensures proper separation of concerns
-- **Security Best Practices**: Validates file uploads and API integrations
+- **Coding Standards**: Enforces consistent Node.js/Express patterns using async/await
+- **Visual Guidelines**: Maintains modern, clean UI design with Tailwind CSS principles
+- **Architecture Rules**: Ensures proper separation of concerns and security best practices
+- **Technology Stack**: Guides development using specified tech stack (Node.js, Express, Sharp/Jimp)
 
 ### **MCP Integration**
-- Enhanced AI capabilities through Model Context Protocol
-- Seamless integration with external APIs and services
-- Intelligent code suggestions and optimizations
+This project utilizes multiple Model Context Protocol servers for enhanced development capabilities:
+
+#### **GitHub MCP**
+- **Issue Management**: Create, update, and track GitHub issues directly from Kiro
+- **Pull Request Workflow**: Automated PR creation and status updates
+- **Repository Operations**: Branch management, file operations, and commit automation
+- **Project Tracking**: Sync development progress with GitHub project boards
+
+#### **PostgreSQL MCP**
+- **Database Operations**: Query execution and schema management
+- **Performance Analysis**: Query optimization and index recommendations
+- **Health Monitoring**: Database health checks and performance metrics
+
+#### **TestSprite MCP**
+- **Automated Testing**: Generate and execute comprehensive test suites
+- **Test Planning**: Create structured test plans for frontend and backend
+- **Code Coverage**: Monitor test coverage and identify gaps
+- **Integration Testing**: End-to-end testing capabilities
+
+#### **Pexels MCP**
+- **Stock Images**: Access to high-quality stock photos for UI mockups
+- **Asset Management**: Download and organize visual assets
+- **Design Resources**: Curated photo collections for design inspiration
 
 ## 📁 Project Structure
 
@@ -137,7 +156,48 @@ cp .env.template .env
 4. Set redirect URI: `http://localhost:3000/api/auth/etsy/callback`
 5. Add credentials to `.env`
 
-### 4. Environment Variables
+### 4. MCP Server Configuration
+
+This project uses several MCP servers for enhanced development capabilities. The configuration is managed in `.kiro/settings/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "github": {
+      "command": "uvx",
+      "args": ["mcp-server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "your_github_token_here"
+      }
+    },
+    "postgres": {
+      "command": "uvx", 
+      "args": ["mcp-server-postgres"],
+      "env": {
+        "POSTGRES_CONNECTION_STRING": "postgresql://user:pass@localhost:5432/dbname"
+      }
+    },
+    "testsprite": {
+      "command": "uvx",
+      "args": ["testsprite-mcp-server"]
+    },
+    "pexels": {
+      "command": "uvx",
+      "args": ["mcp-server-pexels"],
+      "env": {
+        "PEXELS_API_KEY": "your_pexels_api_key_here"
+      }
+    }
+  }
+}
+```
+
+**MCP Prerequisites:**
+- Install `uv` and `uvx`: Follow [uv installation guide](https://docs.astral.sh/uv/getting-started/installation/)
+- Get GitHub Personal Access Token from [GitHub Settings](https://github.com/settings/tokens)
+- Get Pexels API key from [Pexels API](https://www.pexels.com/api/)
+
+### 5. Environment Variables
 Update your `.env` file with the following:
 
 ```env
@@ -230,13 +290,47 @@ npm run test:watch
 
 ## 🔧 Development Workflow
 
-This project uses Kiro AI for enhanced development:
+This project uses Kiro AI for enhanced development with automated workflows:
+
+### **Automated Development Process**
 
 1. **Feature Development**: Use Kiro specs to define and implement features
-2. **Code Quality**: Agent hooks automatically run tests and formatting
-3. **Documentation**: Auto-generated docs keep README and API docs current
-4. **Testing**: Automated test execution on file changes
-5. **Deployment**: Consistent build and deployment processes
+2. **Code Analysis**: Agent hooks automatically analyze code quality on file changes
+3. **Task Management**: GitHub issues are automatically updated when features are completed
+4. **Quality Assurance**: Automated testing and formatting ensure code standards
+5. **Version Control**: Task completion triggers automatic commit staging with user approval
+
+### **Agent Hook Workflows**
+
+#### **Code Analyzer Hook**
+- **Trigger**: File save events on `.js`, `.html`, `.css` files
+- **Actions**: 
+  - Runs ESLint and Prettier checks
+  - Analyzes code complexity and suggests improvements
+  - Validates security best practices
+  - Updates code documentation
+
+#### **Task Synchronization Hook**
+- **Trigger**: Feature implementation completion
+- **Actions**:
+  - Scans code for completed feature markers
+  - Updates corresponding GitHub issue status
+  - Adds implementation notes to issue comments
+  - Moves tasks through project board columns
+
+#### **Task Completion Commit Hook**
+- **Trigger**: Task marked as completed in `tasks.md`
+- **Actions**:
+  - Stages all modified files
+  - Generates descriptive commit message
+  - Requests user permission before committing
+  - Links commit to GitHub issue
+
+### **Development Best Practices**
+- Use descriptive commit messages linked to GitHub issues
+- Follow the established coding standards enforced by Agent Steering
+- Leverage MCP integrations for external service operations
+- Maintain task tracking in `tasks.md` for automated workflows
 
 ## 📚 API Documentation
 
