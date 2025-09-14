@@ -7,6 +7,17 @@ class APIClient {
         this.refreshToken = this.getStoredRefreshToken();
         this.isRefreshing = false;
         this.failedQueue = [];
+        this.isStaticMode = this.detectStaticMode();
+    }
+
+    /**
+     * Detect if running in static mode (GitHub Pages)
+     */
+    detectStaticMode() {
+        return window.location.hostname.includes('github.io') || 
+               window.location.hostname.includes('pages.dev') ||
+               !window.location.port || 
+               window.location.protocol === 'file:';
     }
 
     /**
@@ -113,6 +124,11 @@ class APIClient {
      * Make authenticated API request with automatic token refresh
      */
     async makeRequest(url, options = {}) {
+        // In static mode, return mock responses
+        if (this.isStaticMode) {
+            return this.getMockResponse(url, options);
+        }
+
         const config = {
             ...options,
             headers: {
@@ -148,6 +164,55 @@ class APIClient {
     }
 
     /**
+     * Get mock response for static mode
+     */
+    getMockResponse(url, options = {}) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                const mockResponse = {
+                    ok: true,
+                    status: 200,
+                    json: async () => {
+                        if (url.includes('/auth/status')) {
+                            return {
+                                success: true,
+                                authenticated: false,
+                                services: {
+                                    googleDrive: { connected: false },
+                                    etsy: { connected: false }
+                                }
+                            };
+                        }
+                        if (url.includes('/settings')) {
+                            return {
+                                success: true,
+                                settings: {
+                                    watermark: { enabled: true, text: 'Sample Watermark' },
+                                    collage: { enabled: true, layout: 'grid' },
+                                    ai: { enabled: true, provider: 'gemini' }
+                                }
+                            };
+                        }
+                        if (url.includes('/health')) {
+                            return {
+                                success: true,
+                                status: 'healthy (demo mode)',
+                                message: 'Running in static demo mode'
+                            };
+                        }
+                        return {
+                            success: true,
+                            message: 'Demo mode - no backend available',
+                            data: {}
+                        };
+                    }
+                };
+                resolve(mockResponse);
+            }, 500); // Simulate network delay
+        });
+    }
+
+    /**
      * Handle authentication failure
      */
     handleAuthFailure() {
@@ -162,6 +227,11 @@ class APIClient {
      * Upload images with progress tracking
      */
     async uploadImages(files, options = {}, onProgress = null) {
+        // In static mode, simulate upload process
+        if (this.isStaticMode) {
+            return this.simulateUpload(files, options, onProgress);
+        }
+
         const formData = new FormData();
         
         // Add files to form data
@@ -228,6 +298,42 @@ class APIClient {
             
             xhr.timeout = 300000; // 5 minute timeout
             xhr.send(formData);
+        });
+    }
+
+    /**
+     * Simulate upload process for static mode
+     */
+    async simulateUpload(files, options = {}, onProgress = null) {
+        return new Promise((resolve) => {
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 20;
+                if (progress > 100) progress = 100;
+
+                if (onProgress) {
+                    onProgress({
+                        type: 'upload',
+                        loaded: progress,
+                        total: 100,
+                        percent: progress
+                    });
+                }
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    resolve({
+                        success: true,
+                        message: 'Demo upload completed',
+                        processingId: 'demo-' + Date.now(),
+                        files: files.map(file => ({
+                            name: file.name,
+                            size: file.size,
+                            type: file.type
+                        }))
+                    });
+                }
+            }, 200);
         });
     }
 

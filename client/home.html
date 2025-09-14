@@ -37,6 +37,15 @@
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body class="min-h-screen">
+    <!-- Demo Notice (only shown in static mode) -->
+    <div id="demo-notice" class="hidden bg-gradient-to-r from-blue-500 to-purple-600 text-white text-center py-2 px-4 text-sm">
+      <i class="fas fa-info-circle mr-2"></i>
+      <strong>Demo Mode:</strong> This is a static preview. Full functionality requires the backend server.
+      <a href="https://github.com/your-username/EtsySelfManagement" class="underline ml-2" target="_blank">
+        <i class="fab fa-github mr-1"></i>View Source
+      </a>
+    </div>
+
     <!-- Navigation -->
     <nav class="bg-white/95 backdrop-blur-xl shadow-sm border-b border-white/20">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -376,5 +385,17 @@
 
     <!-- JavaScript -->
     <script src="js/navigation.js"></script>
+    <script>
+      // Show demo notice in static mode
+      document.addEventListener('DOMContentLoaded', () => {
+        const isStaticMode = window.location.hostname.includes('github.io') || 
+                           window.location.hostname.includes('pages.dev') ||
+                           window.location.protocol === 'file:';
+        
+        if (isStaticMode) {
+          document.getElementById('demo-notice').classList.remove('hidden');
+        }
+      });
+    </script>
   </body>
 </html>

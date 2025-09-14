@@ -462,7 +462,7 @@ class EtsyService {
           }
         );
         uploaded.push(response.data);
-        console.log(`Digital file ${i + 1} uploaded successfully:`, response.data);
+        //console.log(`Digital file ${i + 1} uploaded successfully:`, response.data);
       } catch (error) {
         console.error(`Failed to upload digital file ${i + 1}:`, error.response?.data || error.message);
         throw new Error(

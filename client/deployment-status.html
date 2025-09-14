@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Status - ListGenie</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        'primary-dark': '#4f46e5',
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <div class="max-w-4xl mx-auto py-12 px-4">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">
+                <i class="fas fa-rocket text-primary mr-2"></i>
+                Deployment Status
+            </h1>
+            <p class="text-gray-600">Check the current deployment status and configuration</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+            <!-- Deployment Info -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                    Deployment Info
+                </h2>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Environment:</span>
+                        <span id="environment" class="font-medium">Detecting...</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Host:</span>
+                        <span id="host" class="font-medium">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Protocol:</span>
+                        <span id="protocol" class="font-medium">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Build Time:</span>
+                        <span id="build-time" class="font-medium">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature Status -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-cogs text-green-500 mr-2"></i>
+                    Feature Status
+                </h2>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Frontend UI</span>
+                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                            <i class="fas fa-check mr-1"></i>Active
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Navigation</span>
+                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                            <i class="fas fa-check mr-1"></i>Active
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Backend API</span>
+                        <span id="api-status" class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
+                            <i class="fas fa-clock mr-1"></i>Checking...
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">File Upload</span>
+                        <span id="upload-status" class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
+                            <i class="fas fa-clock mr-1"></i>Checking...
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-8 text-center space-y-4">
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="home.html" class="px-6 py-3 bg-primary text-white rounded-2xl hover:bg-primary-dark transition-colors">
+                    <i class="fas fa-home mr-2"></i>
+                    Go to Home
+                </a>
+                <a href="upload.html" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-2xl hover:bg-gray-300 transition-colors">
+                    <i class="fas fa-upload mr-2"></i>
+                    Try Upload
+                </a>
+            </div>
+            
+            <div id="github-link" class="hidden">
+                <a href="#" id="repo-link" target="_blank" class="text-primary hover:text-primary-dark">
+                    <i class="fab fa-github mr-2"></i>
+                    View Source Code
+                </a>
+            </div>
+        </div>
+
+        <!-- Build Info -->
+        <div id="build-info" class="mt-8 bg-gray-100 rounded-2xl p-4 text-sm text-gray-600 hidden">
+            <h3 class="font-semibold mb-2">Build Information</h3>
+            <pre id="build-details" class="whitespace-pre-wrap"></pre>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Detect environment
+            const isGitHubPages = window.location.hostname.includes('github.io');
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const isStaticMode = isGitHubPages || window.location.protocol === 'file:';
+
+            // Update deployment info
+            document.getElementById('environment').textContent = isGitHubPages ? 'GitHub Pages' : 
+                                                                isLocalhost ? 'Local Development' : 
+                                                                'Production';
+            document.getElementById('host').textContent = window.location.hostname;
+            document.getElementById('protocol').textContent = window.location.protocol;
+
+            // Check API status
+            try {
+                const response = await fetch('/api/health');
+                if (response.ok) {
+                    document.getElementById('api-status').innerHTML = '<i class="fas fa-check mr-1"></i>Active';
+                    document.getElementById('api-status').className = 'px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm';
+                    
+                    document.getElementById('upload-status').innerHTML = '<i class="fas fa-check mr-1"></i>Active';
+                    document.getElementById('upload-status').className = 'px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm';
+                } else {
+                    throw new Error('API not available');
+                }
+            } catch (error) {
+                document.getElementById('api-status').innerHTML = '<i class="fas fa-times mr-1"></i>Demo Mode';
+                document.getElementById('api-status').className = 'px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm';
+                
+                document.getElementById('upload-status').innerHTML = '<i class="fas fa-play mr-1"></i>Simulated';
+                document.getElementById('upload-status').className = 'px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm';
+            }
+
+            // Show GitHub link if on GitHub Pages
+            if (isGitHubPages) {
+                const parts = window.location.hostname.split('.');
+                const username = parts[0];
+                const repoName = window.location.pathname.split('/')[1] || 'EtsySelfManagement';
+                
+                document.getElementById('repo-link').href = `https://github.com/${username}/${repoName}`;
+                document.getElementById('github-link').classList.remove('hidden');
+            }
+
+            // Load build info if available
+            try {
+                const buildResponse = await fetch('/build-info.json');
+                if (buildResponse.ok) {
+                    const buildInfo = await buildResponse.json();
+                    document.getElementById('build-time').textContent = new Date(buildInfo.timestamp).toLocaleString();
+                    document.getElementById('build-details').textContent = JSON.stringify(buildInfo, null, 2);
+                    document.getElementById('build-info').classList.remove('hidden');
+                }
+            } catch (error) {
+                // Build info not available
+                document.getElementById('build-time').textContent = 'Not available';
+            }
+        });
+    </script>
+</body>
+</html>

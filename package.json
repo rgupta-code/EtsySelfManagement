@@ -12,6 +12,7 @@
     "build": "npm run build:client && npm run build:server",
     "build:client": "node scripts/build-client.js",
     "build:server": "echo 'Server build complete - no transpilation needed'",
+    "build:static": "npm run build:client",
     "prebuild": "npm run lint && npm run test:ci",
     "postbuild": "echo 'Build completed successfully'",
     "test": "jest",
@@ -29,7 +30,8 @@
     "setup": "npm install && npm run validate",
     "postinstall": "node scripts/dev-setup.js",
     "serve": "npm start",
-    "serve:prod": "NODE_ENV=production npm start"
+    "serve:prod": "NODE_ENV=production npm start",
+    "setup:github-pages": "node scripts/setup-github-pages.js"
   },
   "keywords": [
     "etsy",

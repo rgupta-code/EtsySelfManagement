@@ -376,3 +376,21 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - Ensure temp directory has write permissions
 
 For more help, check the [DEVELOPMENT.md](DEVELOPMENT.md) guide or open an issue.
+
+## 🌐 GitHub Pages Deployment
+
+You can deploy the frontend as a static demo site on GitHub Pages:
+
+### Quick Deploy
+1. Push your code to a public GitHub repository
+2. Go to **Settings** → **Pages** in your repository
+3. Select **GitHub Actions** as the source
+4. The site will automatically deploy to `https://yourusername.github.io/repositoryname`
+
+### What's Included in Static Mode
+- ✅ Full UI and navigation
+- ✅ Form interfaces and styling
+- ⚠️ Simulated upload and API responses (demo mode)
+- ❌ No backend functionality (image processing, integrations)
+
+See [GITHUB_PAGES_SETUP.md](GITHUB_PAGES_SETUP.md) for detailed deployment instructions.
