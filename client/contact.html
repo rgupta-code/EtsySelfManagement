@@ -32,6 +32,8 @@
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/styles.css">
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body class="min-h-screen">
     <!-- Navigation -->
@@ -185,21 +187,6 @@
 
     <!-- JavaScript -->
     <script src="js/navigation.js"></script>
-    <script>
-        // Contact form handling
-        document.getElementById('contact-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Get form data
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData);
-            
-            // Show success message (in a real app, this would send to a server)
-            alert('Thank you for your message! We\'ll get back to you soon.');
-            
-            // Reset form
-            this.reset();
-        });
-    </script>
+    <script src="js/contact.js"></script>
 </body>
 </html>

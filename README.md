@@ -8,6 +8,7 @@ A self-management web application designed for Etsy sellers to streamline their 
 - **Automated Packaging**: Zip original files and upload to Google Drive automatically
 - **AI-Powered Metadata**: Generate titles, descriptions, and tags using Google Gemini AI
 - **Etsy Integration**: Create draft listings directly in your Etsy shop
+- **Contact Form**: EmailJS-powered contact form for user support and feedback
 - **Modern UI**: Clean, responsive interface built with Tailwind CSS
 - **Secure Authentication**: OAuth integration with Google Drive and Etsy APIs
 
@@ -147,6 +148,14 @@ cp .env.template .env
 #### Google Gemini AI Setup
 1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
 2. Create an API key for Gemini
+
+#### EmailJS Setup (Contact Form)
+1. Create account at [EmailJS.com](https://www.emailjs.com/)
+2. Set up email service and template
+3. Get Service ID, Template ID, and Public Key
+4. Update `.env` with EmailJS credentials
+
+For detailed EmailJS setup instructions, see [EMAILJS_SETUP.md](EMAILJS_SETUP.md)
 3. Add the key to `.env` as `GOOGLE_AI_API_KEY`
 
 #### Etsy API Setup
