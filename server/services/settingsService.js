@@ -231,8 +231,8 @@ class SettingsService {
       throw new Error('Invalid watermark position');
     }
     
-    if (watermark.opacity !== undefined && (watermark.opacity < 0 || watermark.opacity > 1)) {
-      throw new Error('Watermark opacity must be between 0 and 1');
+    if (watermark.opacity !== undefined && (watermark.opacity < 0 || watermark.opacity > 100)) {
+      throw new Error('Watermark opacity must be between 0 and 100');
     }
     
     if (watermark.fontSize !== undefined && (watermark.fontSize < 8 || watermark.fontSize > 100)) {

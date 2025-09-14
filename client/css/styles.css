@@ -337,7 +337,6 @@ nav {
 input[type="range"] {
     -webkit-appearance: none;
     appearance: none;
-    background: transparent;
     cursor: pointer;
 }
 

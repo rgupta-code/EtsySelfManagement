@@ -4,18 +4,22 @@ class SettingsManager {
         this.settings = {
             watermark: {
                 text: '© Your Brand Name',
-                position: 'bottom-right',
+                angle: -30,
                 opacity: 70,
-                fontSize: 'medium'
-            },
-            collage: {
-                layout: 'grid',
-                spacing: 10,
-                dimensions: { width: 2000, height: 2000 }
+                fontSize: 'medium',
+                color: '#b0b0b0',
+                spacing: 200,
+                enabled: true
             },
             googleDrive: {
                 folderName: 'ListGenie Backups',
-                autoOrganize: false
+                autoOrganize: false,
+                autoUpload: true
+            },
+            etsy: {
+                shopId: null,
+                defaultCategory: null,
+                autoDraft: true
             },
             authentication: {
                 googleDrive: { connected: false, email: null },
@@ -46,13 +50,8 @@ class SettingsManager {
             });
         }
 
-        // Collage form listeners
-        const collageForm = document.getElementById('collage-form');
-        if (collageForm) {
-            collageForm.addEventListener('input', (e) => {
-                this.handleCollageChange(e);
-            });
-        }
+
+
 
         // Drive form listeners
         const driveForm = document.getElementById('drive-form');
@@ -96,26 +95,6 @@ class SettingsManager {
         }
 
         // Custom dimensions toggle
-        const dimensionsSelect = document.getElementById('collage-dimensions');
-        if (dimensionsSelect) {
-            dimensionsSelect.addEventListener('change', (e) => {
-                this.toggleCustomDimensions(e.target.value === 'custom');
-            });
-        }
-
-        // Custom dimensions inputs
-        const customWidth = document.getElementById('custom-width');
-        const customHeight = document.getElementById('custom-height');
-        if (customWidth && customHeight) {
-            customWidth.addEventListener('input', (e) => {
-                this.settings.collage.dimensions.width = parseInt(e.target.value) || 2000;
-                this.updateCollagePreview();
-            });
-            customHeight.addEventListener('input', (e) => {
-                this.settings.collage.dimensions.height = parseInt(e.target.value) || 2000;
-                this.updateCollagePreview();
-            });
-        }
 
         // Range input updates
         const opacityRange = document.getElementById('watermark-opacity');
@@ -125,10 +104,10 @@ class SettingsManager {
             });
         }
 
-        const spacingRange = document.getElementById('collage-spacing');
-        if (spacingRange) {
-            spacingRange.addEventListener('input', (e) => {
-                document.getElementById('spacing-value').textContent = e.target.value + 'px';
+        const angleRange = document.getElementById('watermark-angle');
+        if (angleRange) {
+            angleRange.addEventListener('input', (e) => {
+                document.getElementById('angle-value').textContent = e.target.value + '°';
             });
         }
     }
@@ -184,8 +163,8 @@ class SettingsManager {
             case 'watermarkText':
                 this.settings.watermark.text = value || '© Your Brand Name';
                 break;
-            case 'watermarkPosition':
-                this.settings.watermark.position = value;
+            case 'watermarkAngle':
+                this.settings.watermark.angle = parseInt(value);
                 break;
             case 'watermarkOpacity':
                 this.settings.watermark.opacity = parseInt(value);
@@ -198,26 +177,8 @@ class SettingsManager {
         this.updateWatermarkPreview();
     }
 
-    handleCollageChange(e) {
-        const { name, value } = e.target;
-        
-        switch (name) {
-            case 'collageLayout':
-                this.settings.collage.layout = value;
-                break;
-            case 'collageSpacing':
-                this.settings.collage.spacing = parseInt(value);
-                break;
-            case 'collageDimensions':
-                if (value !== 'custom') {
-                    const [width, height] = value.split('x').map(Number);
-                    this.settings.collage.dimensions = { width, height };
-                }
-                break;
-        }
-        
-        this.updateCollagePreview();
-    }
+
+
 
     handleDriveChange(e) {
         const { name, value, type, checked } = e.target;
@@ -233,94 +194,53 @@ class SettingsManager {
     }
 
     updateWatermarkPreview() {
-        const preview = document.getElementById('watermark-preview');
-        if (!preview) return;
+        const previewContainer = document.querySelector('#watermark-preview').parentElement;
+        if (!previewContainer) return;
 
-        const { text, position, opacity, fontSize } = this.settings.watermark;
+        const { text, angle, opacity, fontSize } = this.settings.watermark;
         
-        // Update text
-        preview.textContent = text;
-        
-        // Update opacity
-        preview.style.opacity = opacity / 100;
+        // Clear existing watermarks
+        const existingWatermarks = previewContainer.querySelectorAll('.watermark-repeat');
+        existingWatermarks.forEach(w => w.remove());
         
         // Update font size
         const fontSizes = {
-            small: '12px',
-            medium: '16px',
-            large: '20px'
+            small: '10px',
+            medium: '14px',
+            large: '18px'
         };
-        preview.style.fontSize = fontSizes[fontSize] || '16px';
+        const fontSize_px = fontSizes[fontSize] || '14px';
         
-        // Update position
-        preview.style.top = 'auto';
-        preview.style.bottom = 'auto';
-        preview.style.left = 'auto';
-        preview.style.right = 'auto';
+        // Create repeated watermarks across the preview area
+        const containerWidth = previewContainer.offsetWidth;
+        const containerHeight = previewContainer.offsetHeight;
+        const spacing = 120; // Distance between watermarks
         
-        switch (position) {
-            case 'top-left':
-                preview.style.top = '10px';
-                preview.style.left = '10px';
-                break;
-            case 'top-right':
-                preview.style.top = '10px';
-                preview.style.right = '10px';
-                break;
-            case 'bottom-left':
-                preview.style.bottom = '10px';
-                preview.style.left = '10px';
-                break;
-            case 'bottom-right':
-                preview.style.bottom = '10px';
-                preview.style.right = '10px';
-                break;
-            case 'center':
-                preview.style.top = '50%';
-                preview.style.left = '50%';
-                preview.style.transform = 'translate(-50%, -50%)';
-                break;
-        }
-    }
-
-    updateCollagePreview() {
-        const preview = document.getElementById('collage-preview');
-        if (!preview) return;
-
-        const { layout, dimensions } = this.settings.collage;
-        
-        // Update preview content based on layout
-        const layoutNames = {
-            grid: 'Grid Layout',
-            mosaic: 'Mosaic Layout',
-            featured: 'Featured + Grid'
-        };
-        
-        const layoutIcons = {
-            grid: 'fas fa-th',
-            mosaic: 'fas fa-th-large',
-            featured: 'fas fa-clone'
-        };
-        
-        preview.innerHTML = `
-            <div class="text-center text-gray-400">
-                <i class="${layoutIcons[layout]} text-3xl mb-2"></i>
-                <p>${layoutNames[layout]} Preview</p>
-                <p class="text-sm">${dimensions.width}×${dimensions.height}px</p>
-            </div>
-        `;
-    }
-
-    toggleCustomDimensions(show) {
-        const customDiv = document.getElementById('custom-dimensions');
-        if (customDiv) {
-            if (show) {
-                customDiv.classList.remove('hidden');
-            } else {
-                customDiv.classList.add('hidden');
+        for (let x = 0; x < containerWidth; x += spacing) {
+            for (let y = 0; y < containerHeight; y += spacing) {
+                const watermark = document.createElement('div');
+                watermark.className = 'watermark-repeat absolute text-gray-800 font-semibold pointer-events-none select-none';
+                watermark.textContent = text;
+                watermark.style.left = x + 'px';
+                watermark.style.top = y + 'px';
+                watermark.style.opacity = opacity / 100;
+                watermark.style.fontSize = fontSize_px;
+                watermark.style.transform = `rotate(${angle}deg)`;
+                watermark.style.transformOrigin = 'center';
+                watermark.style.whiteSpace = 'nowrap';
+                
+                previewContainer.appendChild(watermark);
             }
         }
+        
+        // Hide the original single watermark
+        const originalPreview = document.getElementById('watermark-preview');
+        if (originalPreview) {
+            originalPreview.style.display = 'none';
+        }
     }
+
+
 
     async handleGoogleAuth() {
         const button = document.getElementById('google-auth-btn');
@@ -383,7 +303,7 @@ class SettingsManager {
         const googleStatus = document.getElementById('google-status');
         const googleBtn = document.getElementById('google-auth-btn');
         
-        if (status.services?.googleDrive?.connected) {
+        if (googleStatus && googleBtn && status.services?.googleDrive?.connected) {
             googleStatus.innerHTML = `
                 <span class="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
                 <span class="text-sm text-green-600">Connected</span>
@@ -400,7 +320,7 @@ class SettingsManager {
         const etsyStatus = document.getElementById('etsy-status');
         const etsyBtn = document.getElementById('etsy-auth-btn');
         
-        if (status.services?.etsy?.connected) {
+        if (etsyStatus && etsyBtn && status.services?.etsy?.connected) {
             etsyStatus.innerHTML = `
                 <span class="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
                 <span class="text-sm text-green-600">Connected</span>
@@ -416,6 +336,8 @@ class SettingsManager {
 
     showAuthError(service, message) {
         const statusDiv = document.getElementById('settings-status');
+        if (!statusDiv) return; // Exit if element doesn't exist
+        
         statusDiv.className = 'bg-red-50 border border-red-200 rounded-2xl p-4 mt-6';
         statusDiv.innerHTML = `
             <div class="flex">
@@ -433,6 +355,38 @@ class SettingsManager {
         }, 5000);
     }
 
+    showSettingsSource(source) {
+        const sourceDiv = document.getElementById('settings-source');
+        const sourceText = document.getElementById('settings-source-text');
+        
+        if (sourceDiv && sourceText) {
+            const sourceInfo = {
+                'localStorage': {
+                    text: 'Settings loaded from local storage',
+                    class: 'bg-blue-100 text-blue-800'
+                },
+                'backend': {
+                    text: 'Settings synced from server',
+                    class: 'bg-green-100 text-green-800'
+                },
+                'defaults': {
+                    text: 'Using default settings',
+                    class: 'bg-gray-100 text-gray-800'
+                }
+            };
+            
+            const info = sourceInfo[source] || sourceInfo['defaults'];
+            sourceText.textContent = info.text;
+            sourceDiv.className = `inline-flex items-center px-3 py-1 rounded-full text-sm ${info.class}`;
+            sourceDiv.classList.remove('hidden');
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                sourceDiv.classList.add('hidden');
+            }, 3000);
+        }
+    }
+
     async saveSettings() {
         const button = document.getElementById('save-settings-btn');
         const originalText = button.innerHTML;
@@ -441,17 +395,29 @@ class SettingsManager {
             button.disabled = true;
             button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
             
+            // Collect current form values
+            this.collectFormValues();
+            
             // Validate settings
             const validation = this.validateSettings();
             if (!validation.valid) {
                 throw new Error(validation.message);
             }
             
-            // Save to localStorage
+            // Save to localStorage immediately for offline access
             localStorage.setItem('ListGenie-settings', JSON.stringify(this.settings));
+            console.log('Settings saved to localStorage:', this.settings);
             
-            // Send to backend using API client
-            await window.apiClient.saveSettings(this.settings);
+            // Try to send to backend
+            try {
+                // Convert settings for backend before sending
+                const backendSettings = this.convertSettingsForBackend(this.settings);
+                await window.apiClient.saveSettings(backendSettings);
+                console.log('Settings saved to backend successfully');
+            } catch (apiError) {
+                console.warn('Could not save to backend, settings saved locally:', apiError);
+                // Still show success since local save worked
+            }
             
             this.showSaveSuccess();
             
@@ -462,6 +428,113 @@ class SettingsManager {
             button.disabled = false;
             button.innerHTML = originalText;
         }
+    }
+
+    /**
+     * Convert backend settings format to frontend format
+     */
+    convertBackendToFrontend(backendSettings) {
+        const frontendSettings = JSON.parse(JSON.stringify(backendSettings)); // Deep clone
+        
+        // Ensure watermark settings exist
+        if (!frontendSettings.watermark) {
+            frontendSettings.watermark = {};
+        }
+        
+        // Convert opacity from 0-1 to 0-100
+        if (frontendSettings.watermark.opacity !== undefined) {
+            frontendSettings.watermark.opacity = Math.round(frontendSettings.watermark.opacity * 100);
+        }
+        
+        // Convert fontSize from number to text
+        if (frontendSettings.watermark.fontSize !== undefined) {
+            const fontSizeMap = {
+                32: 'small',
+                40: 'medium',
+                48: 'large'
+            };
+            frontendSettings.watermark.fontSize = fontSizeMap[frontendSettings.watermark.fontSize] || 'medium';
+        }
+        
+        console.log('Converted backend settings to frontend:', frontendSettings);
+        
+        return frontendSettings;
+    }
+
+    /**
+     * Convert frontend settings format to backend format
+     */
+    convertSettingsForBackend(frontendSettings) {
+        const backendSettings = JSON.parse(JSON.stringify(frontendSettings)); // Deep clone
+        
+        // Ensure watermark settings exist
+        if (!backendSettings.watermark) {
+            backendSettings.watermark = {};
+        }
+        
+        // Convert opacity from 0-100 to 0-1
+        if (backendSettings.watermark.opacity !== undefined) {
+            backendSettings.watermark.opacity = backendSettings.watermark.opacity / 100;
+        }
+        
+        // Convert fontSize from text to number
+        if (backendSettings.watermark.fontSize) {
+            const fontSizeMap = {
+                'small': 32,
+                'medium': 40,
+                'large': 48
+            };
+            const originalFontSize = backendSettings.watermark.fontSize;
+            backendSettings.watermark.fontSize = fontSizeMap[backendSettings.watermark.fontSize] || 40;
+            console.log(`Converted font size: ${originalFontSize} -> ${backendSettings.watermark.fontSize}`);
+        } else {
+            console.warn('No font size found in watermark settings:', backendSettings.watermark);
+        }
+        
+        // Ensure angle is a number
+        if (backendSettings.watermark.angle !== undefined) {
+            backendSettings.watermark.angle = parseInt(backendSettings.watermark.angle) || -30;
+        }
+        
+        // Ensure enabled is a boolean
+        if (backendSettings.watermark.enabled === undefined) {
+            backendSettings.watermark.enabled = true; // Default to enabled
+        }
+        
+        console.log('Converted settings for backend:', backendSettings);
+        
+        return backendSettings;
+    }
+
+    /**
+     * Collect current form values into settings object
+     */
+    collectFormValues() {
+        // Watermark settings
+        const watermarkText = document.getElementById('watermark-text');
+        if (watermarkText) this.settings.watermark.text = watermarkText.value || '© Your Brand Name';
+        
+        const watermarkAngle = document.getElementById('watermark-angle');
+        if (watermarkAngle) this.settings.watermark.angle = parseInt(watermarkAngle.value);
+        
+        const watermarkOpacity = document.getElementById('watermark-opacity');
+        if (watermarkOpacity) this.settings.watermark.opacity = parseInt(watermarkOpacity.value);
+        
+        const watermarkSize = document.getElementById('watermark-size');
+        if (watermarkSize) {
+            this.settings.watermark.fontSize = watermarkSize.value;
+            console.log('Collected font size from form:', watermarkSize.value);
+        }
+        
+        
+
+
+        // Google Drive settings
+        const driveFolder = document.getElementById('drive-folder');
+        if (driveFolder) this.settings.googleDrive.folderName = driveFolder.value || 'ListGenie Backups';
+        
+        const autoOrganize = document.getElementById('auto-organize');
+        if (autoOrganize) this.settings.googleDrive.autoOrganize = autoOrganize.checked;
     }
 
     validateSettings() {
@@ -479,12 +552,14 @@ class SettingsManager {
             return { valid: false, message: 'Watermark opacity must be between 10% and 100%' };
         }
         
-        // Validate collage dimensions
-        const { width, height } = this.settings.collage.dimensions;
-        if (width < 500 || width > 3000 || height < 500 || height > 3000) {
-            return { valid: false, message: 'Collage dimensions must be between 500px and 3000px' };
+        // Validate font size
+        if (!this.settings.watermark.fontSize) {
+            return { valid: false, message: 'Watermark font size must be selected' };
         }
         
+        
+
+
         // Validate folder name
         if (!this.settings.googleDrive.folderName.trim()) {
             return { valid: false, message: 'Google Drive folder name cannot be empty' };
@@ -535,26 +610,42 @@ class SettingsManager {
 
     async loadSettings() {
         try {
-            // Try to load from backend first
-            try {
-                const response = await window.apiClient.getSettings();
-                if (response.success && response.settings) {
-                    this.settings = { ...this.settings, ...response.settings };
-                    console.log('Settings loaded from backend:', response.settings);
-                }
-            } catch (apiError) {
-                console.warn('Could not load settings from backend, using local storage:', apiError);
-            }
-            
-            // Fallback to localStorage
+            // First try to load from localStorage for immediate UI update
             const saved = localStorage.getItem('ListGenie-settings');
+            let loadedFromLocal = false;
             if (saved) {
                 try {
                     const parsedSettings = JSON.parse(saved);
-                    this.settings = { ...this.settings, ...parsedSettings };
+                    this.settings = this.mergeWithDefaults(parsedSettings);
                     console.log('Settings loaded from localStorage:', parsedSettings);
+                    loadedFromLocal = true;
+                    this.showSettingsSource('localStorage');
                 } catch (parseError) {
                     console.error('Error parsing saved settings:', parseError);
+                }
+            }
+            
+            // Then try to load from backend and sync
+            try {
+                const response = await window.apiClient.getSettings();
+                if (response.success && response.settings) {
+                    // Convert backend settings to frontend format
+                    const frontendSettings = this.convertBackendToFrontend(response.settings);
+                    // Merge backend settings with current settings
+                    const backendSettings = this.mergeWithDefaults(frontendSettings);
+                    this.settings = { ...this.settings, ...backendSettings };
+                    
+                    // Update localStorage with backend data
+                    localStorage.setItem('ListGenie-settings', JSON.stringify(this.settings));
+                    console.log('Settings synced from backend:', response.settings);
+                    this.showSettingsSource('backend');
+                } else if (!loadedFromLocal) {
+                    this.showSettingsSource('defaults');
+                }
+            } catch (apiError) {
+                console.warn('Could not load settings from backend, using local storage:', apiError);
+                if (!loadedFromLocal) {
+                    this.showSettingsSource('defaults');
                 }
             }
             
@@ -564,50 +655,73 @@ class SettingsManager {
         }
     }
 
+    /**
+     * Merge settings with defaults to ensure all properties exist
+     */
+    mergeWithDefaults(userSettings) {
+        const defaults = {
+            watermark: {
+                text: '© Your Brand Name',
+                angle: -30,
+                opacity: 70, // Frontend uses 0-100, backend uses 0-1
+                fontSize: 'medium',
+                color: '#b0b0b0',
+                spacing: 200,
+                enabled: true
+            },
+            googleDrive: {
+                folderName: 'ListGenie Backups',
+                autoOrganize: false,
+                autoUpload: true
+            },
+            etsy: {
+                shopId: null,
+                defaultCategory: null,
+                autoDraft: true
+            },
+            authentication: {
+                googleDrive: { connected: false, email: null },
+                etsy: { connected: false, shopName: null }
+            }
+        };
+
+        const merged = { ...defaults };
+        
+        // Deep merge each section
+        Object.keys(defaults).forEach(section => {
+            if (userSettings[section] && typeof userSettings[section] === 'object') {
+                merged[section] = { ...defaults[section], ...userSettings[section] };
+            }
+        });
+        
+        return merged;
+    }
+
     populateForm() {
         // Populate watermark settings
         const watermarkText = document.getElementById('watermark-text');
         if (watermarkText) watermarkText.value = this.settings.watermark.text;
         
-        const watermarkPosition = document.getElementById('watermark-position');
-        if (watermarkPosition) watermarkPosition.value = this.settings.watermark.position;
+        const watermarkAngle = document.getElementById('watermark-angle');
+        if (watermarkAngle) {
+            watermarkAngle.value = this.settings.watermark.angle;
+            const angleValue = document.getElementById('angle-value');
+            if (angleValue) angleValue.textContent = this.settings.watermark.angle + '°';
+        }
         
         const watermarkOpacity = document.getElementById('watermark-opacity');
         if (watermarkOpacity) {
             watermarkOpacity.value = this.settings.watermark.opacity;
-            document.getElementById('opacity-value').textContent = this.settings.watermark.opacity + '%';
+            const opacityValue = document.getElementById('opacity-value');
+            if (opacityValue) opacityValue.textContent = this.settings.watermark.opacity + '%';
         }
         
         const watermarkSize = document.getElementById('watermark-size');
         if (watermarkSize) watermarkSize.value = this.settings.watermark.fontSize;
         
-        // Populate collage settings
-        const collageLayout = document.getElementById('collage-layout');
-        if (collageLayout) collageLayout.value = this.settings.collage.layout;
         
-        const collageSpacing = document.getElementById('collage-spacing');
-        if (collageSpacing) {
-            collageSpacing.value = this.settings.collage.spacing;
-            document.getElementById('spacing-value').textContent = this.settings.collage.spacing + 'px';
-        }
-        
-        // Set dimensions
-        const { width, height } = this.settings.collage.dimensions;
-        const dimensionsSelect = document.getElementById('collage-dimensions');
-        const standardSize = `${width}x${height}`;
-        const standardOptions = ['2000x2000', '1500x1500', '1200x1200'];
-        
-        if (dimensionsSelect) {
-            if (standardOptions.includes(standardSize)) {
-                dimensionsSelect.value = standardSize;
-            } else {
-                dimensionsSelect.value = 'custom';
-                this.toggleCustomDimensions(true);
-                document.getElementById('custom-width').value = width;
-                document.getElementById('custom-height').value = height;
-            }
-        }
-        
+
+
         // Populate Google Drive settings
         const driveFolder = document.getElementById('drive-folder');
         if (driveFolder) driveFolder.value = this.settings.googleDrive.folderName;
@@ -618,7 +732,6 @@ class SettingsManager {
 
     updatePreview() {
         this.updateWatermarkPreview();
-        this.updateCollagePreview();
     }
 
     // Public method to get current settings
@@ -636,8 +749,13 @@ class SettingsManager {
 
 // Initialize settings manager when DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
-    // Only initialize if we're on the settings page
-    if (document.getElementById('settings-page') || document.querySelector('title')?.textContent?.includes('Settings')) {
+    // Initialize settings manager on all pages that need it
+    const needsSettings = document.getElementById('settings-page') || 
+                         document.querySelector('title')?.textContent?.includes('Settings') ||
+                         document.getElementById('drop-zone') || // Upload page
+                         document.getElementById('file-input'); // Upload page
+    
+    if (needsSettings) {
         // Wait for API client to be available
         const waitForAPIClient = () => {
             return new Promise((resolve) => {
@@ -651,14 +769,71 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         await waitForAPIClient();
         
-        window.settingsManager = new SettingsManager();
-        await window.settingsManager.init();
+        if (!window.settingsManager) {
+            window.settingsManager = new SettingsManager();
+            await window.settingsManager.init();
+        }
     }
 });
 
 // Global function to get settings (for use by other modules)
 function getSettings() {
-    return window.settingsManager ? window.settingsManager.getSettings() : null;
+    if (window.settingsManager) {
+        return window.settingsManager.getSettings();
+    }
+    
+    // Fallback to localStorage if settings manager not available
+    try {
+        const saved = localStorage.getItem('ListGenie-settings');
+        if (saved) {
+            return JSON.parse(saved);
+        }
+    } catch (error) {
+        console.error('Error loading settings from localStorage:', error);
+    }
+    
+    // Return default settings if nothing else works
+    return {
+        watermark: {
+            text: '© Your Brand Name',
+            angle: -30,
+            opacity: 70,
+            fontSize: 'medium',
+            color: '#b0b0b0',
+            spacing: 200,
+            enabled: true
+        },
+        googleDrive: {
+            folderName: 'ListGenie Backups',
+            autoOrganize: false,
+            autoUpload: true
+        },
+        etsy: {
+            shopId: null,
+            defaultCategory: null,
+            autoDraft: true
+        },
+        authentication: {
+            googleDrive: { connected: false, email: null },
+            etsy: { connected: false, shopName: null }
+        }
+    };
+}
+
+// Global function to update settings from other modules
+function updateSettings(newSettings) {
+    if (window.settingsManager) {
+        window.settingsManager.updateSettings(newSettings);
+    }
+    
+    // Also update localStorage
+    try {
+        const currentSettings = getSettings();
+        const mergedSettings = { ...currentSettings, ...newSettings };
+        localStorage.setItem('ListGenie-settings', JSON.stringify(mergedSettings));
+    } catch (error) {
+        console.error('Error updating settings in localStorage:', error);
+    }
 }
 
 console.log('Settings module loaded');

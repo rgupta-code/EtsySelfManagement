@@ -1,11 +1,13 @@
 {
   "watermark": {
-    "text": "Updated Brand Name",
-    "position": "bottom-left",
+    "text": "Copyright",
+    "angle": -35,
     "opacity": 0.8,
-    "fontSize": 32,
+    "fontSize": 40,
     "color": "#FF0000",
-    "enabled": true
+    "spacing": 200,
+    "enabled": true,
+    "position": "bottom-left"
   },
   "collage": {
     "layout": "grid",
@@ -13,28 +15,29 @@
       "width": 1500,
       "height": 1500
     },
-    "spacing": 15,
     "backgroundColor": "#FFFFFF",
-    "enabled": true
+    "enabled": true,
+    "spacing": 15
   },
   "googleDrive": {
-    "folderId": null,
     "folderName": "Etsy Listings",
-    "autoUpload": true
+    "autoOrganize": false,
+    "autoUpload": true,
+    "folderId": null
   },
   "etsy": {
     "shopId": null,
     "defaultCategory": null,
     "autoDraft": true
   },
-  "processing": {
-    "imageQuality": 90,
-    "maxImageSize": 10485760,
-    "allowedFormats": [
-      "jpeg",
-      "jpg",
-      "png",
-      "webp"
-    ]
+  "authentication": {
+    "googleDrive": {
+      "connected": false,
+      "email": null
+    },
+    "etsy": {
+      "connected": false,
+      "shopName": null
+    }
   }
 }
