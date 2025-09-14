@@ -275,6 +275,9 @@ class UploadManager {
             // Reset progress indicators
             this.resetProgressIndicators();
             
+            // Reset processing container header to show processing state
+            this.resetProcessingContainerHeader();
+            
             // Start progress tracking
             this.updateProgressStep('validation', 'in-progress');
             
@@ -504,23 +507,24 @@ class UploadManager {
         const processingContainer = document.getElementById('processing-container');
         const header = processingContainer.querySelector('.text-center');
         if (header) {
-            const icon = header.querySelector('.w-16.h-16');
+            // Look for the icon div (it could have different classes after being updated)
+            const icon = header.querySelector('div[class*="w-12"], div[class*="w-16"]') || header.querySelector('div:first-child');
             const title = header.querySelector('h3');
             const subtitle = header.querySelector('p');
             
             if (icon) {
-                icon.className = 'w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4';
-                icon.innerHTML = '<i class="fas fa-cog fa-spin text-2xl text-primary"></i>';
+                icon.className = 'w-12 h-12 bg-gradient-to-br from-primary/10 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-3';
+                icon.innerHTML = '<i class="fas fa-cog fa-spin text-lg text-primary"></i>';
             }
             
             if (title) {
                 title.textContent = 'Processing Your Images';
-                title.className = 'text-xl font-semibold text-gray-900 mb-2';
+                title.className = 'text-lg font-semibold text-gray-900 mb-1';
             }
             
             if (subtitle) {
                 subtitle.textContent = 'Please wait while we process your images and create your listing...';
-                subtitle.className = 'text-gray-600';
+                subtitle.className = 'text-sm text-gray-600';
             }
         }
     }
@@ -721,23 +725,24 @@ class UploadManager {
         const processingContainer = document.getElementById('processing-container');
         const header = processingContainer.querySelector('.text-center');
         if (header) {
-            const icon = header.querySelector('.w-12.h-12');
+            // Look for the icon div (it could have different classes after being updated)
+            const icon = header.querySelector('div[class*="w-12"], div[class*="w-16"]') || header.querySelector('div:first-child');
             const title = header.querySelector('h3');
             const subtitle = header.querySelector('p');
             
             if (icon) {
-                icon.className = 'w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4';
-                icon.innerHTML = '<i class="fas fa-check text-2xl text-green-600"></i>';
+                icon.className = 'w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3';
+                icon.innerHTML = '<i class="fas fa-check text-lg text-green-600"></i>';
             }
             
             if (title) {
                 title.textContent = 'Processing Complete!';
-                title.className = 'text-xl font-semibold text-green-900 mb-2';
+                title.className = 'text-lg font-semibold text-green-900 mb-1';
             }
             
             if (subtitle) {
                 subtitle.textContent = 'Your listing has been created successfully.';
-                subtitle.className = 'text-green-600';
+                subtitle.className = 'text-sm text-green-600';
             }
         }
         
