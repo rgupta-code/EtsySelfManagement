@@ -56,7 +56,7 @@ async function setupGitHubPages() {
         
         // Replace placeholder GitHub URL
         const updated = content.replace(
-          /https:\/\/github\.com\/your-username\/EtsySelfManagement/g,
+          /https:\/\/github\.com\/rgupta-code\/EtsySelfManagement/g,
           githubUrl
         );
         
