@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The Etsy Listing Management App is a comprehensive web application designed to streamline the listing creation process for Etsy sellers. The system automates the entire workflow from image upload to draft listing creation, including image processing, asset management, AI-powered metadata generation, and integration with external services like Google Drive and Etsy's API.
+ListGenie is a comprehensive web application designed to streamline the listing creation process for Etsy sellers. The system automates the entire workflow from image upload to draft listing creation, including image processing, asset management, AI-powered metadata generation, and integration with external services like Google Drive and Etsy's API.
 
 ## Requirements
 

@@ -1,6 +1,8 @@
-# Etsy Listing Management
+# ListGenie
 
 A self-management web application designed for Etsy sellers to streamline their business operations. Built with modern web technologies and enhanced by AI-powered development tools.
+
+**Built with Kiro** - Leveraging advanced AI development capabilities for enhanced productivity and code quality.
 
 ## 🚀 Features
 
